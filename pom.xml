@@ -23,11 +23,18 @@
 	<scm>
 		<url>https://github.com/mookins/omron-fins</url>
 		<connection>https://github.com/mookins/omron-fins.git</connection>
+		<developerConnection>mookins</developerConnection>
 	</scm>
 
 	<issueManagement>
-		<url>https://bitbucket.org/malleblas/fins/issues</url>
+		<url>https://github.com/mookins/omron-fins/issues</url>
+		<system>Github Issues</system>
 	</issueManagement>
+
+	<ciManagement>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/mookins/omron-fins</url>
+	</ciManagement>
 
 	<modules>
 		<module>omron-fins-core</module>
