@@ -1,1 +1,1 @@
-# omron-fins
+# Omron FINS

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>io.github.mookins</groupId>
+		<artifactId>omron-fins</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<name>Omron FINS Core</name>
+	<description>Omron FINS core libraries</description>
+	<artifactId>omron-fins-core</artifactId>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-buffer</artifactId>
+			<version>${netty.version}</version>
+		</dependency>
+		
+	</dependencies>
+</project>

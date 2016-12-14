@@ -9,19 +9,19 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<name>Omron FINS/TCP Master</name>
-	<description>Omron FINS/TCP master</description>
-	<artifactId>omron-fins-tcp-master</artifactId>
+	<name>Omron FINS Master</name>
+	<description>Omron FINS UDP master</description>
+	<artifactId>omron-fins-udp-master</artifactId>
 
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>fins-core</artifactId>
+			<artifactId>omron-fins-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>fins-codec</artifactId>
+			<artifactId>omron-fins-codec</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
@@ -29,17 +29,6 @@
 			<groupId>io.netty</groupId>
 			<artifactId>netty-handler</artifactId>
 			<version>${netty.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>${logback.version}</version>
 		</dependency>
 	</dependencies>
 </project>

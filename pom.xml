@@ -3,53 +3,67 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>io.bessel</groupId>
-	<artifactId>fins</artifactId>
+	<groupId>io.github.mookins</groupId>
+	<artifactId>omron-fins</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>FINS</name>
 	<description>High-performance, non-blocking, zero-buffer-copying Omron FINS for Java</description>
-	<url>https://bitbucket.org/malleblas/fins</url>
+	<url>https://github.com/mookins/omron-fins</url>
 
 	<developers>
 		<developer>
-			<id>malleblas</id>
-			<name>Michael Alleblas</name>
-			<email>michael@alleblas.com</email>
+			<id>mookins</id>
+			<name>mookins</name>
+			<email>mikey@mookins.com</email>
 		</developer>
 	</developers>
 
 	<scm>
-		<url>https://bitbucket.org/malleblas/fins</url>
-		<connection>https://bitbucket.org/malleblas/fins.git</connection>
+		<url>https://github.com/mookins/omron-fins</url>
+		<connection>https://github.com/mookins/omron-fins.git</connection>
 	</scm>
-	
+
 	<issueManagement>
 		<url>https://bitbucket.org/malleblas/fins/issues</url>
 	</issueManagement>
-	
+
 	<modules>
-		<module>fins-core</module>
-		<module>fins-codec</module>
-		<module>fins-udp-master</module>
-		<module>fins-udp-slave</module>
-		<module>fins-tcp-slave</module>
-		<!-- <module>fins-tcp-master</module>		
-		<module>fins-examples</module> -->
+		<module>omron-fins-core</module>
+		<module>omron-fins-codec</module>
+		<module>omron-fins-udp-master</module>
+		<module>omron-fins-udp-slave</module>
+		<module>omron-fins-tcp-slave</module>
+		<!-- <module>omron-fins-tcp-master</module> <module>omron-fins-examples</module> -->
 	</modules>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+		<java.version>1.8</java.version>
+
 		<netty.version>4.0.34.Final</netty.version>
 		<guava.version>19.0</guava.version>
-		<slf4j.version>1.7.16</slf4j.version>
-		<logback.version>1.1.5</logback.version>
+		<slf4j.version>1.7.21</slf4j.version>
 		<junit.version>4.12</junit.version>
-		<testng.version>6.9.10</testng.version>
 	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<plugins>
@@ -57,8 +71,8 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
 				</configuration>
 			</plugin>
 		</plugins>
