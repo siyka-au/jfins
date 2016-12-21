@@ -37,51 +37,11 @@
 	</ciManagement>
 
 	<modules>
+		<module>omron-fins-parent</module>
 		<module>omron-fins-core</module>
 		<module>omron-fins-codec</module>
 		<module>omron-fins-udp-master</module>
 		<module>omron-fins-udp-slave</module>
 		<module>omron-fins-tcp-slave</module>
-		<!-- <module>omron-fins-tcp-master</module> <module>omron-fins-examples</module> -->
 	</modules>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-		<java.version>1.8</java.version>
-
-		<netty.version>4.0.34.Final</netty.version>
-		<guava.version>19.0</guava.version>
-		<slf4j.version>1.7.21</slf4j.version>
-		<junit.version>4.12</junit.version>
-	</properties>
-
-	<dependencies>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>

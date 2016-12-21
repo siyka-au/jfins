@@ -14,7 +14,7 @@
 
 	<parent>
 		<groupId>io.github.mookins</groupId>
-		<artifactId>omron-fins</artifactId>
+		<artifactId>omron-fins-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
