@@ -36,6 +36,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 
 public class FinsNettyUdpMaster implements FinsMaster {
 
@@ -68,7 +70,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 				@Override
 				public void initChannel(DatagramChannel channel) throws Exception {
 					channel.pipeline()
-						//.addLast(new LoggingHandler(LogLevel.DEBUG))
+						.addLast(new LoggingHandler(LogLevel.DEBUG))
 						.addLast(new FinsFrameUdpCodec())
 						.addLast(new FinsMasterHandler(FinsNettyUdpMaster.this));
 				}
