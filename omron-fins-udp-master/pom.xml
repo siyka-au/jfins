@@ -7,6 +7,7 @@
 		<groupId>io.github.mookins</groupId>
 		<artifactId>omron-fins-parent</artifactId>
 		<version>0.0.1</version>
+		<relativePath>../omron-fins-parent/pom.xml</relativePath>
 	</parent>
 
 	<name>Omron FINS Master</name>
@@ -29,6 +30,11 @@
 			<groupId>io.netty</groupId>
 			<artifactId>netty-handler</artifactId>
 			<version>${netty.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 		</dependency>
 	</dependencies>
 </project>

@@ -8,7 +8,7 @@
 	<version>0.0.1</version>
 	<packaging>pom</packaging>
 
-	<name>FINS</name>
+	<name>Omron FINS</name>
 	<description>High-performance, non-blocking, zero-buffer-copying Omron FINS for Java</description>
 	<url>https://github.com/mookins/omron-fins</url>
 
@@ -43,5 +43,6 @@
 		<module>omron-fins-udp-master</module>
 		<module>omron-fins-udp-slave</module>
 		<module>omron-fins-tcp-slave</module>
+		<module>omron-fins-tester</module>
 	</modules>
 </project>
