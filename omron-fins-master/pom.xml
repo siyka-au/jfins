@@ -12,18 +12,13 @@
 	</parent>
 
 	<name>Omron FINS Master</name>
-	<description>Omron FINS UDP master</description>
+	<description>Omron FINS master</description>
 	<artifactId>omron-fins-master</artifactId>
 
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>omron-fins-master</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-handler</artifactId>
+			<artifactId>omron-fins-codec</artifactId>
 		</dependency>
 
 		<dependency>

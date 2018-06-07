@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>io.github.mookins</groupId>
+		<groupId>com.siyka</groupId>
 		<artifactId>omron-fins-parent</artifactId>
 		<version>0.0.1</version>
 		<relativePath>../omron-fins-parent/pom.xml</relativePath>
@@ -17,19 +18,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>omron-fins-core</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>omron-fins-codec</artifactId>
-			<version>${project.version}</version>
+			<artifactId>omron-fins-slave</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-handler</artifactId>
-			<version>${netty.version}</version>
 		</dependency>
 
 		<dependency>

@@ -11,19 +11,14 @@
 		<relativePath>../omron-fins-parent/pom.xml</relativePath>
 	</parent>
 
-	<name>Omron FINS Master</name>
-	<description>Omron FINS UDP master</description>
-	<artifactId>omron-fins-master</artifactId>
+	<name>Omron FINS Slave</name>
+	<description>Omron FINS slave</description>
+	<artifactId>omron-fins-slave</artifactId>
 
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>omron-fins-master</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-handler</artifactId>
+			<artifactId>omron-fins-codec</artifactId>
 		</dependency>
 
 		<dependency>

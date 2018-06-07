@@ -3,46 +3,21 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>io.github.mookins</groupId>
+	<groupId>com.siyka</groupId>
 	<artifactId>omron-fins</artifactId>
 	<version>0.0.1</version>
 	<packaging>pom</packaging>
 
 	<name>Omron FINS</name>
 	<description>High-performance, non-blocking, zero-buffer-copying Omron FINS for Java</description>
-	<url>https://github.com/mookins/omron-fins</url>
-
-	<developers>
-		<developer>
-			<id>mookins</id>
-			<name>mookins</name>
-			<email>mikey@mookins.com</email>
-		</developer>
-	</developers>
-
-	<scm>
-		<url>https://github.com/mookins/omron-fins</url>
-		<connection>https://github.com/mookins/omron-fins.git</connection>
-		<developerConnection>mookins</developerConnection>
-	</scm>
-
-	<issueManagement>
-		<url>https://github.com/mookins/omron-fins/issues</url>
-		<system>Github Issues</system>
-	</issueManagement>
-
-	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.org/mookins/omron-fins</url>
-	</ciManagement>
 
 	<modules>
 		<module>omron-fins-parent</module>
 		<module>omron-fins-core</module>
 		<module>omron-fins-codec</module>
-		<module>omron-fins-udp-master</module>
+		<module>omron-fins-master</module>
+		<module>omron-fins-slave</module>
+		<!-- <module>omron-fins-udp-master</module> -->
 		<module>omron-fins-udp-slave</module>
-		<module>omron-fins-tcp-slave</module>
-		<module>omron-fins-tester</module>
 	</modules>
 </project>

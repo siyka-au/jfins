@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>io.github.mookins</groupId>
+		<groupId>com.siyka</groupId>
 		<artifactId>omron-fins-parent</artifactId>
 		<version>0.0.1</version>
 		<relativePath>../omron-fins-parent/pom.xml</relativePath>
@@ -18,7 +18,6 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-buffer</artifactId>
-			<version>${netty.version}</version>
 		</dependency>
 
 		<dependency>
