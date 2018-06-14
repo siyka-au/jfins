@@ -7,12 +7,8 @@ import com.siyka.omron.fins.FinsIoAddress;
 
 public class MemoryAreaWriteDoubleWordCommand extends MemoryAreaWriteCommand<Integer> {
 
-	public MemoryAreaWriteDoubleWordCommand(final FinsCommandCode commandCode, final FinsIoAddress ioAddress, final List<Integer> dataItems) {
-		super(commandCode, ioAddress, dataItems);
+	public MemoryAreaWriteDoubleWordCommand(final FinsCommandCode commandCode, final FinsIoAddress ioAddress, final List<Integer> items) {
+		super(commandCode, ioAddress, items);
 	}
 
-	public String toString() {
-		return String.format("%s itemType[DWORD]", super.toString());
-	}
-	
 }

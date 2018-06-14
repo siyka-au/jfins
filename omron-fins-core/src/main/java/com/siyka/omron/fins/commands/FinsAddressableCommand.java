@@ -6,7 +6,7 @@ import com.siyka.omron.fins.FinsBasePdu;
 import com.siyka.omron.fins.FinsCommandCode;
 import com.siyka.omron.fins.FinsIoAddress;
 
-public abstract class FinsAddressableCommand extends FinsBasePdu implements FinsCommand {
+public abstract class FinsAddressableCommand extends FinsBasePdu {
 
 	private final FinsIoAddress ioAddress;
 

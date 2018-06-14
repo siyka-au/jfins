@@ -1,118 +1,286 @@
 package com.siyka.omron.fins.master;
 
 import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.siyka.omron.fins.Bit;
-import com.siyka.omron.fins.FinsEndCode;
 import com.siyka.omron.fins.FinsFrame;
-import com.siyka.omron.fins.FinsSimpleFrame;
+import com.siyka.omron.fins.FinsHeader;
+import com.siyka.omron.fins.FinsHeader.MessageType;
+import com.siyka.omron.fins.FinsHeader.ResponseAction;
 import com.siyka.omron.fins.FinsIoAddress;
-import com.siyka.omron.fins.FinsNodeAddress;
-import com.siyka.omron.fins.codec.FinsFrameBuilder;
-import com.siyka.omron.fins.codec.FinsFrameUdpCodec;
+import com.siyka.omron.fins.codec.FinsFrameUdpMasterCodec;
+import com.siyka.omron.fins.commands.FinsCommand;
 import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
-import com.siyka.omron.fins.commands.MemoryAreaWriteBitCommand;
-import com.siyka.omron.fins.commands.MemoryAreaWriteWordCommand;
-import com.siyka.omron.fins.responses.MemoryAreaReadBitResponse;
-import com.siyka.omron.fins.responses.MemoryAreaReadWordResponse;
-import com.siyka.omron.fins.responses.MemoryAreaWriteResponse;
+import com.siyka.omron.fins.responses.FinsResponse;
+import com.siyka.omron.fins.responses.MemoryAreaReadResponse;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.DatagramChannel;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.ReferenceCountUtil;
+import io.netty.util.Timeout;
 
 public class FinsNettyUdpMaster implements FinsMaster {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
-	private final InetSocketAddress destinationAddress;
-	private final InetSocketAddress sourceAddress;
-	private final FinsNodeAddress nodeAddress;
-	
-	private NioEventLoopGroup workerGroup;
-	private Bootstrap bootstrap;
-	private Channel channel;
-	
-	private final AtomicInteger serviceAddress = new AtomicInteger(0);
-	
-	private CompletableFuture<FinsSimpleFrame> sendFuture;
+	private final FinsNettyUdpMasterConfig config;
 
-	// TODO make configurable
-	private int retries = 3;
-	
-	public FinsNettyUdpMaster(InetSocketAddress destinationAddress, InetSocketAddress sourceAddress, FinsNodeAddress nodeAddress) {
-		this.nodeAddress = nodeAddress;
+	private Channel channel;
+	private final Map<Byte, PendingCommand<? extends FinsResponse>> pendingCommands = new ConcurrentHashMap<>();
+	private final AtomicInteger serviceAddress = new AtomicInteger(0);
+
+	private final FinsHeader.Builder headerBuilder;
+
+	public FinsNettyUdpMaster(final FinsNettyUdpMasterConfig config) {
+		Objects.requireNonNull(config);
+		this.config = config;
 		
-		this.workerGroup = new NioEventLoopGroup();
-		this.bootstrap = new Bootstrap();
-		this.bootstrap.group(this.workerGroup)
+		this.headerBuilder = FinsHeader.builder()
+				.useGateway(true)
+				.destinationAddress(config.getDestinationNodeAddress())
+				.sourceAddress(config.getSourceNodeAddress())
+				.messageType(MessageType.COMMAND);
+	}
+
+	public FinsNettyUdpMasterConfig getConfig() {
+		return this.config;
+	}
+
+	public CompletableFuture<FinsMaster> connect() {
+		final CompletableFuture<FinsMaster> masterFuture = new CompletableFuture<>();
+		new Bootstrap().group(this.config.getEventLoop())
 			.channel(NioDatagramChannel.class)
 			.option(ChannelOption.SO_BROADCAST, true)
-			.handler(new ChannelInitializer<DatagramChannel>() {
+			.handler(new ChannelInitializer<NioDatagramChannel>() {
 				@Override
-				public void initChannel(DatagramChannel channel) throws Exception {
+				public void initChannel(NioDatagramChannel channel) throws Exception {
 					channel.pipeline()
+						// Datagram 
+						.addLast(new FinsFrameUdpMasterCodec(config.getDestinationSocketAddress(), config.getSourceSocketAddress()))
 						.addLast(new LoggingHandler(LogLevel.DEBUG))
-						.addLast(new FinsFrameUdpCodec())
-						.addLast(new FinsMasterHandler(FinsNettyUdpMaster.this));
+						// FINS
+						.addLast(new FinsMasterResponseHandler(FinsNettyUdpMaster.this))
+						;
+				}
+			})
+			.connect(this.config.getDestinationSocketAddress(), this.config.getSourceSocketAddress())
+			.addListener((ChannelFuture future) -> {
+				if (future.isSuccess()) {
+					this.channel = future.channel();
+					masterFuture.complete(FinsNettyUdpMaster.this);
+				} else {
+					masterFuture.completeExceptionally(future.cause());
 				}
 			});
-		
-		this.destinationAddress = destinationAddress;
-		this.sourceAddress = sourceAddress;
-	}
-	
-	// FINS Master API
-	@Override
-	public void connect() throws FinsMasterException {
-		if (bootstrap == null) {
-			throw new FinsMasterException("FINS master bootstrap not correctly set");
-		}
-		
-		try {
-			this.channel = bootstrap.connect(this.destinationAddress, this.sourceAddress).sync().channel();
-		} catch (InterruptedException ex) {
-			throw new FinsMasterException("FINS master connection operation interrupted", ex);
-		}
+		return masterFuture;
 	}
 
-	@Override
 	public void disconnect() {
-		Optional.of(this.bootstrap.group()).ifPresent(g -> {
-			try {
-				g.shutdownGracefully().sync();
-			} catch (InterruptedException ex) {
-				logger.error("FINS master channel close operation interrupted", ex);
+		this.config.getEventLoop().shutdownGracefully();
+	}
+
+	public <Response extends FinsResponse> CompletableFuture<Response> sendCommand(final FinsCommand<Response> command) {
+		final CompletableFuture<Response> future = new CompletableFuture<>();
+		final byte serviceAddress = (byte) this.serviceAddress.incrementAndGet();
+
+		final Timeout timeout = this.config.getWheelTimer().newTimeout(t -> {
+			if (t.isCancelled()) return;
+
+			final PendingCommand<? extends FinsResponse> timedOut = pendingCommands.remove(serviceAddress);
+			if (timedOut != null) {
+				timedOut.promise.completeExceptionally(new FinsTimeoutException(config.getTimeout()));
+			}
+		}, this.config.getTimeout().getSeconds(), TimeUnit.SECONDS);
+
+		this.pendingCommands.put(serviceAddress, new PendingCommand<Response>(future, timeout));
+
+		final FinsHeader header = this.headerBuilder
+				.responseAction(ResponseAction.RESPONSE_REQUIRED)
+				.serviceAddress(serviceAddress)
+				.build();
+		
+		this.channel.writeAndFlush(new FinsFrame(header, command)).addListener(f -> {
+			if (!f.isSuccess()) {
+				final PendingCommand<?> p = this.pendingCommands.remove(serviceAddress);
+				if (p != null) {
+					p.promise.completeExceptionally(f.cause());
+					p.timeout.cancel();
+				}
 			}
 		});
+		return future;
+	}
+
+	public static class PendingCommand<Response extends FinsResponse> {
+		private final CompletableFuture<Response> promise = new CompletableFuture<>();
+		private final Timeout timeout;
+
+		public PendingCommand(final CompletableFuture<Response> future, final Timeout timeout) {
+			this.timeout = timeout;
+			this.promise.whenComplete((response, exception) -> {
+				if (response != null) {
+					try {
+						future.complete((Response) response);
+					} catch (ClassCastException castException) {
+						future.completeExceptionally(castException);
+					}
+				} else {
+					future.completeExceptionally(exception);
+				}
+			});
+		}
+
+	}
+	
+	void onChannelRead(final ChannelHandlerContext context, final FinsFrame frame) throws Exception {
+		if (frame.getPdu() instanceof FinsResponse) {
+			@SuppressWarnings("unchecked")
+			PendingCommand<FinsResponse> pending = (PendingCommand<FinsResponse>) pendingCommands.remove(frame.getHeader().getServiceAddress());
+
+			if (pending != null) {
+				pending.timeout.cancel();
+				pending.promise.complete((FinsResponse) frame.getPdu());
+			} else {
+				ReferenceCountUtil.release(frame);
+				logger.debug("Received response for unknown service address: {}", frame.getHeader().getServiceAddress());
+			}
+		} else {
+			logger.error("Unexpected FINS PDU: {}", frame.getPdu());
+		}
+	}
+
+	void onExceptionCaught(final ChannelHandlerContext context, final Throwable cause) throws Exception {
+		logger.error("Exception caught: {}", cause.getMessage(), cause);
+
+		failPendingRequests(cause);
+
+		context.close();
+	}
+
+	private void failPendingRequests(final Throwable cause) {
+		List<PendingCommand<?>> pending = new ArrayList<>(this.pendingCommands.values());
+		pending.forEach(p -> p.promise.completeExceptionally(cause));
+		this.pendingCommands.clear();
+	}
+	
+	private static class FinsMasterResponseHandler extends SimpleChannelInboundHandler<FinsFrame> {
+		
+		private final FinsNettyUdpMaster master;
+
+		private FinsMasterResponseHandler(final FinsNettyUdpMaster master) {
+			this.master = master;
+		}
+
+		@Override
+		protected void channelRead0(final ChannelHandlerContext context, final FinsFrame frame) throws Exception {
+			this.master.onChannelRead(context, frame);
+		}
+
+		@Override
+		public void exceptionCaught(final ChannelHandlerContext context, final Throwable cause) throws Exception {
+			this.master.onExceptionCaught(context, cause);
+		}
+
 	}
 
 	@Override
-	public String readString(FinsNodeAddress destination, FinsIoAddress address, int wordLength) throws FinsMasterException {
-		return readString(destination, address, (short) wordLength);
+	public short readWord(FinsIoAddress address) throws FinsMasterException {
+		readWords(address, 1);
+		return 1;
 	}
-	
+
 	@Override
-	public String readString(FinsNodeAddress destination, FinsIoAddress address, short wordLength) throws FinsMasterException {
-		List<Short> words = this.readWords(destination, address, wordLength);
+	public List<Short> readWords(final FinsIoAddress address, final int itemCount) throws FinsMasterException {		
+		try {
+			final MemoryAreaReadCommand<Short> command = new MemoryAreaReadCommand<>(address, itemCount);
+
+			CompletableFuture<MemoryAreaReadResponse<Short>> future = this.sendCommand(command);
+//			FinsFrame replyFrame = this.send(frame);
+//			byte[] data = replyFrame.getData();
+//			MemoryAreaReadWordResponse response = MemoryAreaReadWordResponse.parseFrom(data, itemCount);
+//			List<Short> items = response.getItems();
+			
+//			if (response.getEndCode() != FinsEndCode.NORMAL_COMPLETION) {
+//				throw new FinsMasterException(String.format("%s", response.getEndCode()));
+//			}
+			
+//			return items;
+			return future.get().getItems();
+		} catch (InterruptedException | ExecutionException e) {
+			throw new FinsMasterException("FINS master exception", e);
+		}
+	}
+
+	@Override
+	public Bit readBit(FinsIoAddress address) throws FinsMasterException {
+//		try {
+			return null;
+//		} catch (InterruptedException | ExecutionException e) {
+//			throw new FinsMasterException("FINS master exception", e);
+//		}
+	}
+
+	@Override
+	public List<Bit> readBits(FinsIoAddress address, int itemCount) throws FinsMasterException {
+//		try {
+			return null;
+//		} catch (InterruptedException | ExecutionException e) {
+//			throw new FinsMasterException("FINS master exception", e);
+//		}
+	}
+
+	@Override
+	public List<Short> readMultipleWords(List<FinsIoAddress> addresses) throws FinsMasterException {
+//		try {
+			return null;
+//		} catch (InterruptedException | ExecutionException e) {
+//			throw new FinsMasterException("FINS master exception", e);
+//		}
+	}
+
+	@Override
+	public void writeWord(FinsIoAddress address, short item) throws FinsMasterException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void writeWords(FinsIoAddress address, List<Short> items)
+			throws FinsMasterException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void writeMultipleWords(List<FinsIoAddress> addresses, List<Short> items)
+			throws FinsMasterException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public String readString(final FinsIoAddress address, final int wordLength) throws FinsMasterException {
+		List<Short> words = this.readWords(address, wordLength);
 		StringBuffer stringBuffer = new StringBuffer(wordLength * 2);
 		byte[] bytes = new byte[2];
 		for (Short s : words) {
@@ -125,172 +293,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 				e.printStackTrace();
 			}
 		}
-		
 		return stringBuffer.toString();
-	}
-	
-	@Override
-	public short readWord(FinsNodeAddress destination, FinsIoAddress address) throws FinsMasterException {	
-		return readWords(destination, address, 1).get(0);
-	}
-
-	@Override
-	public List<Short> readWords(FinsNodeAddress destination, FinsIoAddress address, short itemCount) throws FinsMasterException {		
-		MemoryAreaReadCommand command = new MemoryAreaReadCommand(address, itemCount);
-		
-		FinsFrame frame = new FinsFrameBuilder()
-			.setDestinationAddress(destination)
-			.setSourceAddress(this.nodeAddress)
-			.setServiceAddress(this.getNextServiceAddress())
-			.setData(command.getBytes())
-			.build();
-		
-		FinsFrame replyFrame = this.send(frame);
-		byte[] data = replyFrame.getData();
-		MemoryAreaReadWordResponse response = MemoryAreaReadWordResponse.parseFrom(data, itemCount);
-		List<Short> items = response.getItems();
-		
-		if (response.getEndCode() != FinsEndCode.NORMAL_COMPLETION) {
-			throw new FinsMasterException(String.format("%s", response.getEndCode()));
-		}
-		
-		return items;
-	}
-
-	@Override
-	public List<Short> readWords(FinsNodeAddress destination, FinsIoAddress address, int itemCount) throws FinsMasterException {
-		return readWords(destination, address, (short) itemCount);
-	}
-	
-	@Override
-	public Bit readBit(FinsNodeAddress destination, FinsIoAddress address) throws FinsMasterException {
-		return readBits(destination, address, 1).get(0);
-	}
-	
-	@Override
-	public List<Bit> readBits(FinsNodeAddress destination, FinsIoAddress address, short itemCount) throws FinsMasterException {
-		MemoryAreaReadCommand command = new MemoryAreaReadCommand(address, itemCount);
-		
-		FinsFrame frame = new FinsFrameBuilder()
-			.setDestinationAddress(destination)
-			.setSourceAddress(this.nodeAddress)
-			.setServiceAddress(this.getNextServiceAddress())
-			.setData(command.getBytes())
-			.build();
-		
-		FinsFrame replyFrame = this.send(frame);
-		byte[] data = replyFrame.getData();
-		MemoryAreaReadBitResponse response = MemoryAreaReadBitResponse.parseFrom(data, itemCount);
-		List<Bit> items = response.getItems();
-		
-		if (response.getEndCode() != FinsEndCode.NORMAL_COMPLETION) {
-			throw new FinsMasterException(String.format("%s", response.getEndCode()));
-		}
-		
-		return items;
-	}
-	
-	@Override
-	public List<Bit> readBits(FinsNodeAddress destination, FinsIoAddress address, int itemCount) throws FinsMasterException {
-		return readBits(destination, address, (short) itemCount);
-	}
-
-	@Override
-	public List<Short> readMultipleWords(FinsNodeAddress destination, List<FinsIoAddress> addresses) throws FinsMasterException {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Not implemented yet");
-	}
-
-	@Override
-	public void writeWord(FinsNodeAddress destination, FinsIoAddress address, short value) throws FinsMasterException {
-		List<Short> items = new ArrayList<Short>();
-		items.add(value);
-		writeWords(destination, address, items);
-	}
-
-	@Override
-	public void writeWords(FinsNodeAddress destination, FinsIoAddress address, List<Short> items) throws FinsMasterException {
-		MemoryAreaWriteWordCommand command = new MemoryAreaWriteWordCommand(address, items);
-		
-		FinsFrame frame = new FinsFrameBuilder()
-			.setDestinationAddress(destination)
-			.setSourceAddress(this.nodeAddress)
-			.setServiceAddress(this.getNextServiceAddress())
-			.setData(command.getBytes())
-			.build();
-		
-		FinsFrame replyFrame = this.send(frame);
-		MemoryAreaWriteResponse response = MemoryAreaWriteResponse.parseFrom(replyFrame.getData());
-		
-		if (response.getEndCode() != FinsEndCode.NORMAL_COMPLETION) {
-			throw new FinsMasterException(String.format("%s", response.getEndCode()));
-		}
-	}
-
-	@Override
-	public void writeMultipleWords(FinsNodeAddress destination, List<FinsIoAddress> addresses, List<Short> values) throws FinsMasterException {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Not implemented yet");
-	}
-	
-	private synchronized FinsFrame send(FinsFrame frame) {
-		return this.send(frame, 0);
-	}
-	
-	// Internal methods
-	private synchronized FinsFrame send(FinsFrame frame, int attempt) {
-		logger.debug("Sending FinsFrame");
-
-		try {
-			this.sendFuture = new CompletableFuture<>();
-			logger.debug("Write and flush FinsFrame");
-			this.channel.writeAndFlush(frame);
-			logger.debug("Awaiting future to be completed");
-			FinsFrame replyFrame = this.sendFuture.get(1000, TimeUnit.MILLISECONDS);
-			logger.debug("Future compeleted");
-			return replyFrame;
-		} catch (TimeoutException e) {
-			if (attempt < this.retries) {
-				return send(frame, attempt++);
-			} else {
-				return null;
-			}
-		} catch (InterruptedException | ExecutionException e) {
-			return null;
-		}
-	}
-
-	// Getters and setters
-	private byte getNextServiceAddress() {
-		return (byte) this.serviceAddress.incrementAndGet();
-	}
-	
-	protected CompletableFuture<FinsSimpleFrame> getSendFuture() {
-		return sendFuture;
-	}
-
-	public void writeBit(FinsNodeAddress destination, FinsIoAddress address, Boolean value) throws FinsMasterException {
-		MemoryAreaWriteBitCommand command = new MemoryAreaWriteBitCommand(address, value);
-		
-		FinsFrame frame = new FinsFrameBuilder()
-			.setDestinationAddress(destination)
-			.setSourceAddress(this.nodeAddress)
-			.setServiceAddress(this.getNextServiceAddress())
-			.setData(command.getBytes())
-			.build();
-		
-		FinsFrame replyFrame = this.send(frame);
-		MemoryAreaWriteResponse response = MemoryAreaWriteResponse.parseFrom(replyFrame.getData());
-		
-		if (response.getEndCode() != FinsEndCode.NORMAL_COMPLETION) {
-			throw new FinsMasterException(String.format("%s", response.getEndCode()));
-		}
-		
-	}
-
-	@Override
-	public void close() throws Exception {
-		this.disconnect();
 	}
 	
 }

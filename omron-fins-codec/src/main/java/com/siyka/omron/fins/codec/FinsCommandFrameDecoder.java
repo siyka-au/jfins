@@ -12,7 +12,6 @@ import com.siyka.omron.fins.FinsFrame;
 import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsIoMemoryArea;
-import com.siyka.omron.fins.FinsNodeAddress;
 import com.siyka.omron.fins.commands.MemoryAreaWriteBitCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteDoubleWordCommand;
@@ -27,26 +26,8 @@ public class FinsCommandFrameDecoder implements FinsFrameDecoder {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@Override
-	public FinsFrame decode(final ByteBuf buffer) throws DecoderException {
-		final byte icf = buffer.readByte();
-		// Skip the reserved field
-		buffer.readByte();
-		final byte gatewayCount = buffer.readByte();
-		final byte destinationNetwork = buffer.readByte();
-		final byte destinationNode = buffer.readByte();
-		final byte destinationUnit = buffer.readByte();
-		final byte sourceNetwork = buffer.readByte();
-		final byte sourceNode = buffer.readByte();
-		final byte sourceUnit = buffer.readByte();
-		final byte serviceAddress = buffer.readByte();
-		final FinsHeader header = new FinsHeader(
-				((icf & 0x80) != 0) ? true : false,
-				((icf & 0x40) != 0) ? FinsHeader.MessageType.RESPONSE : FinsHeader.MessageType.COMMAND,
-				((icf & 0x01) != 0) ? FinsHeader.ResponseAction.RESPONSE_NOT_REQUIRED : FinsHeader.ResponseAction.RESPONSE_REQUIRED,
-				gatewayCount,
-				new FinsNodeAddress(destinationNetwork, destinationNode, destinationUnit),
-				new FinsNodeAddress(sourceNetwork, sourceNode, sourceUnit),
-				serviceAddress);
+	public FinsFrame decode(final ByteBuf buffer) {
+		final FinsHeader header = FinsHeaderCodec.decode(buffer);
 		
 		final short commandCodeRaw = buffer.readShort();
 		final FinsCommandCode commandCode = FinsCommandCode.valueOf(commandCodeRaw)
@@ -57,7 +38,7 @@ public class FinsCommandFrameDecoder implements FinsFrameDecoder {
 				return new FinsFrame(header, decodeMemoryAreaWrite(commandCode, buffer));
 
 			default:
-				throw new DecoderException(String.format("Command code not implemented or supported", commandCode));
+				throw new DecoderException(String.format("Command code not implemented or supported: %s", commandCode));
 		}
 	}
 	

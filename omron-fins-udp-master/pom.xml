@@ -13,12 +13,17 @@
 
 	<name>Omron FINS Master</name>
 	<description>Omron FINS UDP master</description>
-	<artifactId>omron-fins-master</artifactId>
+	<artifactId>omron-fins-udp-master</artifactId>
 
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>omron-fins-master</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>omron-fins-codec</artifactId>
 		</dependency>
 
 		<dependency>

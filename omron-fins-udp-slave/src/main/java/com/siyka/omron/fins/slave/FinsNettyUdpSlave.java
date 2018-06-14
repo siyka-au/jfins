@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.siyka.omron.fins.FinsFrame;
 import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.codec.FinsCommandFrameDecoder;
-import com.siyka.omron.fins.codec.FinsFrameUdpCodec;
+import com.siyka.omron.fins.codec.FinsFrameUdpSlaveCodec;
 import com.siyka.omron.fins.codec.FinsResponseFrameEncoder;
 import com.siyka.omron.fins.commands.FinsCommand;
 import com.siyka.omron.fins.responses.FinsResponse;
@@ -20,9 +20,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
@@ -31,57 +29,52 @@ public class FinsNettyUdpSlave implements FinsSlave {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
-	private final AtomicReference<ServiceCommandHandler> commandHandler = new AtomicReference<>(new ServiceCommandHandler() {});
+	private final FinsNettyUdpSlaveConfig config;
 	
-	private final EventLoopGroup group;
+	private final AtomicReference<ServiceCommandHandler> commandHandler = new AtomicReference<>(new ServiceCommandHandler() {});
 
-	public FinsNettyUdpSlave() {
-		this(new NioEventLoopGroup());
+	public FinsNettyUdpSlave(final FinsNettyUdpSlaveConfig config) {
+		Objects.requireNonNull(config);
+		this.config = config;
 	}
 	
-	public FinsNettyUdpSlave(final EventLoopGroup group) {
-		Objects.requireNonNull(group);
-		this.group = group;
+	public FinsNettyUdpSlaveConfig getConfig() {
+		return this.config;
 	}
 	
 	@Override
-	public CompletableFuture<FinsSlave> bind(final String host, final int port) {
+	public CompletableFuture<FinsSlave> bind() {
 		CompletableFuture<FinsSlave> bindFuture = new CompletableFuture<>();
-    	Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(this.group)
-        	.channel(NioDatagramChannel.class)
-        	.option(ChannelOption.SO_BROADCAST, true)
-        	.handler(new ChannelInitializer<NioDatagramChannel>() {
-        		@Override
-        		public void initChannel(NioDatagramChannel channel) throws Exception {
-        			channel.pipeline()
-//						.addLast(new LoggingHandler(LogLevel.DEBUG))
+		new Bootstrap().group(this.config.getGroup())
+			.channel(NioDatagramChannel.class)
+			.option(ChannelOption.SO_BROADCAST, true)
+			.handler(new ChannelInitializer<NioDatagramChannel>() {
+				@Override
+				public void initChannel(NioDatagramChannel channel) throws Exception {
+					channel.pipeline()
 						// Datagram 
-						.addLast(new FinsFrameUdpCodec(new FinsCommandFrameDecoder(), new FinsResponseFrameEncoder()))
+						.addLast(new FinsFrameUdpSlaveCodec(new FinsResponseFrameEncoder(), new FinsCommandFrameDecoder()))
 						.addLast(new LoggingHandler(LogLevel.DEBUG))
 						// FINS
 						.addLast(new FinsSlaveCommandHandler(FinsNettyUdpSlave.this))
 						;
-        		}
+				}
+			})
+			.bind(this.getConfig().getSocketAddress().getAddress(), this.getConfig().getSocketAddress().getPort())
+			.addListener((ChannelFuture future) -> {
+				if (future.isSuccess()) {
+					bindFuture.complete(FinsNettyUdpSlave.this);
+				} else {
+					bindFuture.completeExceptionally(future.cause());
+				}
 			});
-        
-        bootstrap.bind(host, port).addListener((ChannelFuture future) -> {
-            if (future.isSuccess()) {
-//                Channel channel = future.channel();
-//                serverChannels.put(channel.localAddress(), channel);
-                bindFuture.complete(FinsNettyUdpSlave.this);
-            } else {
-                bindFuture.completeExceptionally(future.cause());
-            }
-        });
-        
-        return bindFuture;
+		return bindFuture;
 	}
 	
 	@Override
 	public void shutdown() {
 		logger.debug("Shutting down");
-		this.group.shutdownGracefully();
+		this.config.getGroup().shutdownGracefully();
 	}
 
 	@Override
@@ -89,17 +82,51 @@ public class FinsNettyUdpSlave implements FinsSlave {
 		this.commandHandler.set(handler);
 	}
 	
+	private static class FinsNettyUdpSlaveServiceCommand<Command extends FinsCommand, Response extends FinsResponse> implements ServiceCommand<Command, Response> {
+		
+		private final ChannelHandlerContext context;
+		private final FinsHeader header;
+		private final Command command;
+		
+		private FinsNettyUdpSlaveServiceCommand(ChannelHandlerContext context, final FinsHeader header, Command command) {
+			this.context = context;
+			this.header = FinsHeader.builder()
+					.messageType(FinsHeader.MessageType.RESPONSE)
+					.destinationAddress(header.getSourceAddress())
+					.sourceAddress(header.getDestinationAddress())
+					.serviceAddress(header.getServiceAddress())
+					.build();
+			this.command = command;
+		}
+
+		@Override
+		public Command getCommand() {
+			return this.command;
+		}
+
+		@Override
+		public void sendResponse(Response response) {
+			this.context.writeAndFlush(new FinsFrame(this.header, response));
+		}
+		
+		@SuppressWarnings("unchecked")
+		public static <Command extends FinsCommand, Response extends FinsResponse> FinsNettyUdpSlaveServiceCommand<Command, Response> of(final FinsFrame frame, final ChannelHandlerContext context) {
+			return new FinsNettyUdpSlaveServiceCommand<>(context, frame.getHeader(), (Command) frame.getPdu());
+		}
+		
+	}
+	
 	public void onChannelRead(final ChannelHandlerContext context, final FinsFrame frame) throws Exception {
 		final ServiceCommandHandler handler = this.commandHandler.get();
-        if (handler == null) return;
-        
-        switch (frame.getPdu().getCommandCode()) {
-        	case MEMORY_AREA_WRITE:
-        		handler.onMemoryAreaWrite(FinsNettyUdpSlaveServiceCommand.of(frame, context));
-        		break;
-        	
-        	default:
-        }
+		if (handler == null) return;
+		
+		switch (frame.getPdu().getCommandCode()) {
+			case MEMORY_AREA_WRITE:
+				handler.onMemoryAreaWrite(FinsNettyUdpSlaveServiceCommand.of(frame, context));
+				break;
+			
+			default:
+		}
 	}
 	
 	public void onChannelInactive(final ChannelHandlerContext context) {
@@ -109,10 +136,10 @@ public class FinsNettyUdpSlave implements FinsSlave {
 
 	public void onExceptionCaught(final ChannelHandlerContext context, final Throwable cause) {
 		// TODO Auto-generated method stub
-		logger.error("Cracked the wobblies", cause);
+		logger.debug("Exception has been caught", cause);
 	}
 	
-	public static class FinsSlaveCommandHandler extends SimpleChannelInboundHandler<FinsFrame> {
+	private static class FinsSlaveCommandHandler extends SimpleChannelInboundHandler<FinsFrame> {
 
 		private final FinsNettyUdpSlave slave;
 
@@ -120,51 +147,21 @@ public class FinsNettyUdpSlave implements FinsSlave {
 			this.slave = slave;
 		}
 
-        @Override
-        protected void channelRead0(final ChannelHandlerContext context, final FinsFrame frame) throws Exception {
-            this.slave.onChannelRead(context, frame);
-        }
-
-        @Override
-        public void channelInactive(final ChannelHandlerContext context) throws Exception {
-        	this.slave.onChannelInactive(context);
-        }
-
-        @Override
-        public void exceptionCaught(final ChannelHandlerContext context, final Throwable cause) throws Exception {
-        	this.slave.onExceptionCaught(context, cause);
-        }
-        
-	}
-	
-	private static class FinsNettyUdpSlaveServiceCommand<Command extends FinsCommand, Response extends FinsResponse> implements ServiceCommandHandler.ServiceCommand<Command, Response> {
-		
-		private final ChannelHandlerContext context;
-		private final FinsHeader header;
-		private final Command command;
-		
-		private FinsNettyUdpSlaveServiceCommand(ChannelHandlerContext context, final FinsHeader header, Command command) {
-            this.context = context;
-            this.header = new FinsHeader(FinsHeader.MessageType.RESPONSE, header.getSourceAddress(), header.getDestinationAddress(), header.getServiceAddress());
-            this.command = command;
-        }
-
 		@Override
-		public Command getCommand() {
-			return this.command;
+		protected void channelRead0(final ChannelHandlerContext context, final FinsFrame frame) throws Exception {
+			this.slave.onChannelRead(context, frame);
 		}
 
 		@Override
-		public void sendResponse(Response response) {
-			
-			this.context.writeAndFlush(new FinsFrame(this.header, response));
+		public void channelInactive(final ChannelHandlerContext context) throws Exception {
+			this.slave.onChannelInactive(context);
+		}
+
+		@Override
+		public void exceptionCaught(final ChannelHandlerContext context, final Throwable cause) throws Exception {
+			this.slave.onExceptionCaught(context, cause);
 		}
 		
-		@SuppressWarnings("unchecked")
-		public static <Command extends FinsCommand, Response extends FinsResponse> FinsNettyUdpSlaveServiceCommand<Command, Response> of(final FinsFrame frame, final ChannelHandlerContext context) {
-            return new FinsNettyUdpSlaveServiceCommand<>(context, frame.getHeader(), (Command) frame.getPdu());
-        }
-		
 	}
-	
+
 }

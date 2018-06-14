@@ -17,7 +17,7 @@
 		<module>omron-fins-codec</module>
 		<module>omron-fins-master</module>
 		<module>omron-fins-slave</module>
-		<!-- <module>omron-fins-udp-master</module> -->
+		<module>omron-fins-udp-master</module>
 		<module>omron-fins-udp-slave</module>
 	</modules>
 </project>

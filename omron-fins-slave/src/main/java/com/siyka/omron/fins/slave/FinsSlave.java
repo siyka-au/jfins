@@ -4,10 +4,10 @@ import java.util.concurrent.CompletableFuture;
 
 public interface FinsSlave {
 
-	public CompletableFuture<FinsSlave> bind(final String host, final int port);
-	
+	public CompletableFuture<FinsSlave> bind();
+
 	public void shutdown();
-	
-	public void setHandler(final ServiceCommandHandler handler);	
-	
+
+	public void setHandler(final ServiceCommandHandler handler);
+
 }
