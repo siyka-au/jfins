@@ -17,7 +17,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.MessageToMessageCodec;
-import io.netty.util.ReferenceCountUtil;
 
 public class FinsFrameUdpSlaveCodec extends MessageToMessageCodec<DatagramPacket, FinsFrame> {
 
@@ -36,21 +35,17 @@ public class FinsFrameUdpSlaveCodec extends MessageToMessageCodec<DatagramPacket
 		this.encoder = encoder;
 		this.decoder = decoder;
 		this.addresses = CacheBuilder.newBuilder()
-			       .expireAfterAccess(1, TimeUnit.MINUTES)
-			       .build();
+				.expireAfterAccess(1, TimeUnit.MINUTES)
+				.build();
 	}
 	
 	@Override
 	protected void encode(final ChannelHandlerContext context, final FinsFrame frame, final List<Object> out) {
-		try {
-			final ByteBuf buffer = this.encoder.encode(frame);
-			final InetSocketAddress recipient = this.addresses.getIfPresent(frame.getHeader().getDestinationAddress());
-			final InetSocketAddress sender = this.addresses.getIfPresent(frame.getHeader().getSourceAddress());
-			DatagramPacket packet = new DatagramPacket(buffer, recipient, sender);
-			out.add(packet);
-		} finally {
-			ReferenceCountUtil.release(frame);
-		}
+		final ByteBuf buffer = this.encoder.encode(frame);
+		final InetSocketAddress recipient = this.addresses.getIfPresent(frame.getHeader().getDestinationAddress());
+		final InetSocketAddress sender = this.addresses.getIfPresent(frame.getHeader().getSourceAddress());
+		DatagramPacket packet = new DatagramPacket(buffer, recipient, sender);
+		out.add(packet);
 	}
 	
 	@Override

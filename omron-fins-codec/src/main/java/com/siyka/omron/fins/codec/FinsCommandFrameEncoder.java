@@ -20,9 +20,17 @@ public class FinsCommandFrameEncoder implements FinsFrameEncoder {
 	@SuppressWarnings("unused")
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
+	private final FinsMasterStateManager manager;
+	
+	public FinsCommandFrameEncoder(final FinsMasterStateManager manager) {
+		this.manager = manager;
+	}
+	
 	@Override
 	public ByteBuf encode(final FinsFrame frame) {
 		final ByteBuf buffer = Unpooled.buffer();
+		
+		this.manager.putFinsFrame(frame.getHeader().getServiceAddress(), frame);
 		
 		buffer.writeBytes(FinsHeaderCodec.encode(frame.getHeader()));
 		buffer.writeShort(frame.getPdu().getCommandCode().getValue());
@@ -35,7 +43,7 @@ public class FinsCommandFrameEncoder implements FinsFrameEncoder {
 		
 		switch (frame.getPdu().getCommandCode()) {
 			case MEMORY_AREA_READ:
-				encodeMemoryAreaReadCommand((MemoryAreaReadCommand) frame.getPdu(), buffer);
+				encodeMemoryAreaReadCommand((MemoryAreaReadCommand<?>) frame.getPdu(), buffer);
 				break;
 					
 			case MEMORY_AREA_WRITE:
@@ -49,7 +57,7 @@ public class FinsCommandFrameEncoder implements FinsFrameEncoder {
 		return buffer;
 	}
 
-	private void encodeMemoryAreaReadCommand(final MemoryAreaReadCommand command, final ByteBuf buffer) {
+	private void encodeMemoryAreaReadCommand(final MemoryAreaReadCommand<?> command, final ByteBuf buffer) {
 		buffer.writeShort(command.getItemCount());
 	}
 	

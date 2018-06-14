@@ -13,6 +13,8 @@ import com.siyka.omron.fins.FinsFrame;
 import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsIoMemoryArea;
+import com.siyka.omron.fins.commands.FinsAddressableCommand;
+import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
 import com.siyka.omron.fins.responses.FinsSimpleResponse;
 import com.siyka.omron.fins.responses.MemoryAreaReadResponse;
 import com.siyka.omron.fins.responses.MemoryAreaReadWordResponse;
@@ -25,9 +27,17 @@ public class FinsResponseFrameDecoder implements FinsFrameDecoder {
 	@SuppressWarnings("unused")
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
+	private final FinsMasterStateManager manager;
+	
+	public FinsResponseFrameDecoder(final FinsMasterStateManager manager) {
+		this.manager = manager;
+	}
+	
 	@Override
 	public FinsFrame decode(final ByteBuf buffer) {
 		final FinsHeader header = FinsHeaderCodec.decode(buffer);
+		
+		final FinsFrame initiatingFrame = this.manager.getByServiceByte(header.getServiceAddress());
 		
 		final short commandCodeRaw = buffer.readShort();
 		final FinsCommandCode commandCode = FinsCommandCode.valueOf(commandCodeRaw)
@@ -39,7 +49,7 @@ public class FinsResponseFrameDecoder implements FinsFrameDecoder {
 		
 		switch (commandCode) {
 			case MEMORY_AREA_READ:
-				return new FinsFrame(header, decodeMemoryAreaReadResponse(commandCode, endCode, buffer));
+				return new FinsFrame(header, decodeMemoryAreaReadResponse(initiatingFrame, commandCode, endCode, buffer));
 		
 			case MEMORY_AREA_WRITE:
 			case MEMORY_AREA_FILL:
@@ -55,29 +65,20 @@ public class FinsResponseFrameDecoder implements FinsFrameDecoder {
 		}
 	}
 	
-	private FinsIoAddress decodeIoAddress(final ByteBuf buffer) {
-		final byte ioMemoryAreaCode = buffer.readByte();
-		final FinsIoMemoryArea memoryAreaCode =  FinsIoMemoryArea.valueOf(ioMemoryAreaCode)
-				.orElseThrow(() -> new DecoderException(String.format("Unrecognised IO memory area code 0x%x", ioMemoryAreaCode)));
-		final short address = buffer.readShort();
-		final byte bitOffset = buffer.readByte();
-		return new FinsIoAddress(memoryAreaCode, address, bitOffset);
-	}
-	
-	private MemoryAreaReadResponse<?> decodeMemoryAreaReadResponse(final FinsCommandCode commandCode, final FinsEndCode endCode, final ByteBuf buffer) {
-		final short itemCount = buffer.readShort();
+	private MemoryAreaReadResponse<?> decodeMemoryAreaReadResponse(final FinsFrame initiatingFrame, final FinsCommandCode commandCode, final FinsEndCode endCode, final ByteBuf buffer) {
+		final short itemCount = ((MemoryAreaReadCommand<?>) initiatingFrame.getPdu()).getItemCount();
 		final List<Short> items = new ArrayList<>();
 
-//		switch (ioAddress.getMemoryArea().getDataType()) {
-//			case WORD:
+		switch (((FinsAddressableCommand) initiatingFrame.getPdu()).getIoAddress().getMemoryArea().getDataType()) {
+			case WORD:
 				IntStream.range(0, itemCount)
 						.forEach(i -> items.add(buffer.readShort()));
 				return new MemoryAreaReadWordResponse(commandCode, endCode, items);
 				
-//			default:
-//		}
+			default:
+		}
 		
-//		return null;
+		return null;
 	}
 	
 }

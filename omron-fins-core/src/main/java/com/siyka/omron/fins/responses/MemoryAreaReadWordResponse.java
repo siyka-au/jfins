@@ -1,5 +1,6 @@
 package com.siyka.omron.fins.responses;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.siyka.omron.fins.FinsCommandCode;
@@ -11,4 +12,10 @@ public final class MemoryAreaReadWordResponse extends MemoryAreaReadResponse<Sho
 		super(commandCode, endCode, items);
 	}
 
+	public String toString() {
+		return String.format("itemCount[%d] items%s",
+				this.getItems().size(),
+				Arrays.toString(this.getItems().toArray()));
+	}
+	
 }

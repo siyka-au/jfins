@@ -20,7 +20,10 @@ import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.FinsHeader.MessageType;
 import com.siyka.omron.fins.FinsHeader.ResponseAction;
 import com.siyka.omron.fins.FinsIoAddress;
+import com.siyka.omron.fins.codec.FinsCommandFrameEncoder;
 import com.siyka.omron.fins.codec.FinsFrameUdpMasterCodec;
+import com.siyka.omron.fins.codec.FinsMasterStateManager;
+import com.siyka.omron.fins.codec.FinsResponseFrameDecoder;
 import com.siyka.omron.fins.commands.FinsCommand;
 import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
 import com.siyka.omron.fins.responses.FinsResponse;
@@ -68,30 +71,35 @@ public class FinsNettyUdpMaster implements FinsMaster {
 
 	public CompletableFuture<FinsMaster> connect() {
 		final CompletableFuture<FinsMaster> masterFuture = new CompletableFuture<>();
+		final FinsMasterStateManager manager = new FinsMasterStateManager();
 		new Bootstrap().group(this.config.getEventLoop())
-			.channel(NioDatagramChannel.class)
-			.option(ChannelOption.SO_BROADCAST, true)
-			.handler(new ChannelInitializer<NioDatagramChannel>() {
-				@Override
-				public void initChannel(NioDatagramChannel channel) throws Exception {
-					channel.pipeline()
-						// Datagram 
-						.addLast(new FinsFrameUdpMasterCodec(config.getDestinationSocketAddress(), config.getSourceSocketAddress()))
-						.addLast(new LoggingHandler(LogLevel.DEBUG))
-						// FINS
-						.addLast(new FinsMasterResponseHandler(FinsNettyUdpMaster.this))
-						;
-				}
-			})
-			.connect(this.config.getDestinationSocketAddress(), this.config.getSourceSocketAddress())
-			.addListener((ChannelFuture future) -> {
-				if (future.isSuccess()) {
-					this.channel = future.channel();
-					masterFuture.complete(FinsNettyUdpMaster.this);
-				} else {
-					masterFuture.completeExceptionally(future.cause());
-				}
-			});
+				.channel(NioDatagramChannel.class)
+				.option(ChannelOption.SO_BROADCAST, true)
+				.handler(new ChannelInitializer<NioDatagramChannel>() {
+					@Override
+					public void initChannel(NioDatagramChannel channel) throws Exception {
+						channel.pipeline()
+								// Datagram 
+								.addLast(new FinsFrameUdpMasterCodec(
+										new FinsCommandFrameEncoder(manager),
+										new FinsResponseFrameDecoder(manager),
+										config.getDestinationSocketAddress(),
+										config.getSourceSocketAddress()))
+								.addLast(new LoggingHandler(LogLevel.DEBUG))
+								// FINS
+								.addLast(new FinsMasterResponseHandler(FinsNettyUdpMaster.this))
+								;
+					}
+				})
+				.connect(this.config.getDestinationSocketAddress(), this.config.getSourceSocketAddress())
+				.addListener((ChannelFuture future) -> {
+					if (future.isSuccess()) {
+						this.channel = future.channel();
+						masterFuture.complete(FinsNettyUdpMaster.this);
+					} else {
+						masterFuture.completeExceptionally(future.cause());
+					}
+				});
 		return masterFuture;
 	}
 
@@ -99,132 +107,21 @@ public class FinsNettyUdpMaster implements FinsMaster {
 		this.config.getEventLoop().shutdownGracefully();
 	}
 
-	public <Response extends FinsResponse> CompletableFuture<Response> sendCommand(final FinsCommand<Response> command) {
-		final CompletableFuture<Response> future = new CompletableFuture<>();
-		final byte serviceAddress = (byte) this.serviceAddress.incrementAndGet();
-
-		final Timeout timeout = this.config.getWheelTimer().newTimeout(t -> {
-			if (t.isCancelled()) return;
-
-			final PendingCommand<? extends FinsResponse> timedOut = pendingCommands.remove(serviceAddress);
-			if (timedOut != null) {
-				timedOut.promise.completeExceptionally(new FinsTimeoutException(config.getTimeout()));
-			}
-		}, this.config.getTimeout().getSeconds(), TimeUnit.SECONDS);
-
-		this.pendingCommands.put(serviceAddress, new PendingCommand<Response>(future, timeout));
-
-		final FinsHeader header = this.headerBuilder
-				.responseAction(ResponseAction.RESPONSE_REQUIRED)
-				.serviceAddress(serviceAddress)
-				.build();
-		
-		this.channel.writeAndFlush(new FinsFrame(header, command)).addListener(f -> {
-			if (!f.isSuccess()) {
-				final PendingCommand<?> p = this.pendingCommands.remove(serviceAddress);
-				if (p != null) {
-					p.promise.completeExceptionally(f.cause());
-					p.timeout.cancel();
-				}
-			}
-		});
-		return future;
-	}
-
-	public static class PendingCommand<Response extends FinsResponse> {
-		private final CompletableFuture<Response> promise = new CompletableFuture<>();
-		private final Timeout timeout;
-
-		public PendingCommand(final CompletableFuture<Response> future, final Timeout timeout) {
-			this.timeout = timeout;
-			this.promise.whenComplete((response, exception) -> {
-				if (response != null) {
-					try {
-						future.complete((Response) response);
-					} catch (ClassCastException castException) {
-						future.completeExceptionally(castException);
-					}
-				} else {
-					future.completeExceptionally(exception);
-				}
-			});
-		}
-
-	}
-	
-	void onChannelRead(final ChannelHandlerContext context, final FinsFrame frame) throws Exception {
-		if (frame.getPdu() instanceof FinsResponse) {
-			@SuppressWarnings("unchecked")
-			PendingCommand<FinsResponse> pending = (PendingCommand<FinsResponse>) pendingCommands.remove(frame.getHeader().getServiceAddress());
-
-			if (pending != null) {
-				pending.timeout.cancel();
-				pending.promise.complete((FinsResponse) frame.getPdu());
-			} else {
-				ReferenceCountUtil.release(frame);
-				logger.debug("Received response for unknown service address: {}", frame.getHeader().getServiceAddress());
-			}
-		} else {
-			logger.error("Unexpected FINS PDU: {}", frame.getPdu());
-		}
-	}
-
-	void onExceptionCaught(final ChannelHandlerContext context, final Throwable cause) throws Exception {
-		logger.error("Exception caught: {}", cause.getMessage(), cause);
-
-		failPendingRequests(cause);
-
-		context.close();
-	}
-
-	private void failPendingRequests(final Throwable cause) {
-		List<PendingCommand<?>> pending = new ArrayList<>(this.pendingCommands.values());
-		pending.forEach(p -> p.promise.completeExceptionally(cause));
-		this.pendingCommands.clear();
-	}
-	
-	private static class FinsMasterResponseHandler extends SimpleChannelInboundHandler<FinsFrame> {
-		
-		private final FinsNettyUdpMaster master;
-
-		private FinsMasterResponseHandler(final FinsNettyUdpMaster master) {
-			this.master = master;
-		}
-
-		@Override
-		protected void channelRead0(final ChannelHandlerContext context, final FinsFrame frame) throws Exception {
-			this.master.onChannelRead(context, frame);
-		}
-
-		@Override
-		public void exceptionCaught(final ChannelHandlerContext context, final Throwable cause) throws Exception {
-			this.master.onExceptionCaught(context, cause);
-		}
-
-	}
+	/*
+	 * Functional API
+	 * 
+	 */
 
 	@Override
 	public short readWord(FinsIoAddress address) throws FinsMasterException {
-		readWords(address, 1);
-		return 1;
+		return readWords(address, 1).get(0);
 	}
 
 	@Override
 	public List<Short> readWords(final FinsIoAddress address, final int itemCount) throws FinsMasterException {		
 		try {
 			final MemoryAreaReadCommand<Short> command = new MemoryAreaReadCommand<>(address, itemCount);
-
-			CompletableFuture<MemoryAreaReadResponse<Short>> future = this.sendCommand(command);
-//			FinsFrame replyFrame = this.send(frame);
-//			byte[] data = replyFrame.getData();
-//			MemoryAreaReadWordResponse response = MemoryAreaReadWordResponse.parseFrom(data, itemCount);
-//			List<Short> items = response.getItems();
-			
-//			if (response.getEndCode() != FinsEndCode.NORMAL_COMPLETION) {
-//				throw new FinsMasterException(String.format("%s", response.getEndCode()));
-//			}
-			
-//			return items;
+			final CompletableFuture<MemoryAreaReadResponse<Short>> future = this.sendCommand(command);
 			return future.get().getItems();
 		} catch (InterruptedException | ExecutionException e) {
 			throw new FinsMasterException("FINS master exception", e);
@@ -294,6 +191,112 @@ public class FinsNettyUdpMaster implements FinsMaster {
 			}
 		}
 		return stringBuffer.toString();
+	}
+	
+	/*
+	 * Internal
+	 * 
+	 */
+	
+	private <Response extends FinsResponse> CompletableFuture<Response> sendCommand(final FinsCommand<Response> command) {
+		final CompletableFuture<Response> future = new CompletableFuture<>();
+		final byte serviceAddress = (byte) this.serviceAddress.incrementAndGet();
+
+		final Timeout timeout = this.config.getWheelTimer().newTimeout(t -> {
+			if (t.isCancelled()) return;
+
+			final PendingCommand<? extends FinsResponse> timedOut = pendingCommands.remove(serviceAddress);
+			if (timedOut != null) {
+				timedOut.promise.completeExceptionally(new FinsTimeoutException(config.getTimeout()));
+			}
+		}, this.config.getTimeout().getSeconds(), TimeUnit.SECONDS);
+
+		this.pendingCommands.put(serviceAddress, new PendingCommand<Response>(future, timeout));
+
+		final FinsHeader header = this.headerBuilder
+				.responseAction(ResponseAction.RESPONSE_REQUIRED)
+				.serviceAddress(serviceAddress)
+				.build();
+		
+		this.channel.writeAndFlush(new FinsFrame(header, command)).addListener(f -> {
+			if (!f.isSuccess()) {
+				final PendingCommand<?> p = this.pendingCommands.remove(serviceAddress);
+				if (p != null) {
+					p.promise.completeExceptionally(f.cause());
+					p.timeout.cancel();
+				}
+			}
+		});
+		return future;
+	}
+
+	public static class PendingCommand<Response extends FinsResponse> {
+		private final CompletableFuture<Response> promise = new CompletableFuture<>();
+		private final Timeout timeout;
+
+		public PendingCommand(final CompletableFuture<Response> future, final Timeout timeout) {
+			this.timeout = timeout;
+			this.promise.whenComplete((response, exception) -> {
+				if (response != null) {
+					try {
+						future.complete((Response) response);
+					} catch (ClassCastException castException) {
+						future.completeExceptionally(castException);
+					}
+				} else {
+					future.completeExceptionally(exception);
+				}
+			});
+		}
+	}
+	
+	void onChannelRead(final ChannelHandlerContext context, final FinsFrame frame) throws Exception {
+		if (frame.getPdu() instanceof FinsResponse) {
+			@SuppressWarnings("unchecked")
+			PendingCommand<FinsResponse> pending = (PendingCommand<FinsResponse>) pendingCommands.remove(frame.getHeader().getServiceAddress());
+			
+			if (pending != null) {
+				pending.timeout.cancel();
+				pending.promise.complete((FinsResponse) frame.getPdu());
+			} else {
+				ReferenceCountUtil.release(frame);
+				logger.debug("Received response for unknown service address: {}", frame.getHeader().getServiceAddress());
+			}
+		} else {
+			logger.error("Unexpected FINS PDU: {}", frame.getPdu());
+		}
+	}
+
+	void onExceptionCaught(final ChannelHandlerContext context, final Throwable cause) throws Exception {
+		logger.error("Exception caught: {}", cause.getMessage(), cause);
+		failPendingRequests(cause);
+		context.close();
+	}
+
+	private void failPendingRequests(final Throwable cause) {
+		List<PendingCommand<?>> pending = new ArrayList<>(this.pendingCommands.values());
+		pending.forEach(p -> p.promise.completeExceptionally(cause));
+		this.pendingCommands.clear();
+	}
+	
+	private static class FinsMasterResponseHandler extends SimpleChannelInboundHandler<FinsFrame> {
+		
+		private final FinsNettyUdpMaster master;
+
+		private FinsMasterResponseHandler(final FinsNettyUdpMaster master) {
+			this.master = master;
+		}
+
+		@Override
+		protected void channelRead0(final ChannelHandlerContext context, final FinsFrame frame) throws Exception {
+			this.master.onChannelRead(context, frame);
+		}
+
+		@Override
+		public void exceptionCaught(final ChannelHandlerContext context, final Throwable cause) throws Exception {
+			this.master.onExceptionCaught(context, cause);
+		}
+
 	}
 	
 }
