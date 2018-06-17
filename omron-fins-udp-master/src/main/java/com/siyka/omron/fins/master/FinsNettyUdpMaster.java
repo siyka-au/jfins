@@ -2,6 +2,7 @@ package com.siyka.omron.fins.master;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,13 +21,18 @@ import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.FinsHeader.MessageType;
 import com.siyka.omron.fins.FinsHeader.ResponseAction;
 import com.siyka.omron.fins.FinsIoAddress;
+import com.siyka.omron.fins.Word;
 import com.siyka.omron.fins.codec.FinsCommandFrameEncoder;
 import com.siyka.omron.fins.codec.FinsFrameUdpMasterCodec;
 import com.siyka.omron.fins.codec.FinsMasterStateManager;
 import com.siyka.omron.fins.codec.FinsResponseFrameDecoder;
 import com.siyka.omron.fins.commands.FinsCommand;
 import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
+import com.siyka.omron.fins.commands.MemoryAreaWriteBitCommand;
+import com.siyka.omron.fins.commands.MemoryAreaWriteCommand;
+import com.siyka.omron.fins.commands.MemoryAreaWriteWordCommand;
 import com.siyka.omron.fins.responses.FinsResponse;
+import com.siyka.omron.fins.responses.FinsSimpleResponse;
 import com.siyka.omron.fins.responses.MemoryAreaReadResponse;
 
 import io.netty.bootstrap.Bootstrap;
@@ -113,74 +119,89 @@ public class FinsNettyUdpMaster implements FinsMaster {
 	 */
 
 	@Override
-	public short readWord(FinsIoAddress address) throws FinsMasterException {
+	public Word readWord(FinsIoAddress address) throws FinsMasterException {
 		return readWords(address, 1).get(0);
 	}
 
 	@Override
-	public List<Short> readWords(final FinsIoAddress address, final int itemCount) throws FinsMasterException {		
+	public List<Word> readWords(final FinsIoAddress address, final int itemCount) throws FinsMasterException {		
 		try {
-			final MemoryAreaReadCommand<Short> command = new MemoryAreaReadCommand<>(address, itemCount);
-			final CompletableFuture<MemoryAreaReadResponse<Short>> future = this.sendCommand(command);
+			final MemoryAreaReadCommand<Word> command = new MemoryAreaReadCommand<>(address, itemCount);
+			final CompletableFuture<MemoryAreaReadResponse<Word>> future = this.sendCommand(command);
 			return future.get().getItems();
+		} catch (InterruptedException | ExecutionException e) {
+			throw new FinsMasterException("FINS master exception", e);
+		}
+	}
+			
+	@Override
+	public Bit readBit(FinsIoAddress address) throws FinsMasterException {
+		return this.readBits(address, 1).get(0);
+	}
+	
+	@Override
+	public List<Bit> readBits(final FinsIoAddress address, final int itemCount) throws FinsMasterException {
+//		try {
+			return null;
+//		} catch (InterruptedException | ExecutionException e) {
+//			throw new FinsMasterException("FINS master exception", e);
+//		}
+	}
+
+	@Override
+	public List<Word> readMultipleWords(final List<FinsIoAddress> addresses) throws FinsMasterException {
+//		try {
+			return null;
+//		} catch (InterruptedException | ExecutionException e) {
+//			throw new FinsMasterException("FINS master exception", e);
+//		}
+	}
+
+	@Override
+	public void writeBit(final FinsIoAddress address, final Bit item) throws FinsMasterException {
+		this.writeBits(address, Collections.singletonList(item));
+	}
+	
+	@Override
+	public void writeBits(final FinsIoAddress address, final List<Bit> items) throws FinsMasterException {
+		try {
+			final MemoryAreaWriteCommand<Bit> command = new MemoryAreaWriteBitCommand(address, items);
+			final CompletableFuture<FinsSimpleResponse> future = this.sendCommand(command);
+			future.get();
+		} catch (InterruptedException | ExecutionException e) {
+			throw new FinsMasterException("FINS master exception", e);
+		}
+	}
+	
+	@Override
+	public void writeWord(final FinsIoAddress address, final Word item) throws FinsMasterException {
+		this.writeWords(address, Collections.singletonList(item));
+	}
+
+	@Override
+	public void writeWords(final FinsIoAddress address, final List<Word> items) throws FinsMasterException {
+		try {
+			final MemoryAreaWriteCommand<Word> command = new MemoryAreaWriteWordCommand(address, items);
+			final CompletableFuture<FinsSimpleResponse> future = this.sendCommand(command);
+			future.get();
 		} catch (InterruptedException | ExecutionException e) {
 			throw new FinsMasterException("FINS master exception", e);
 		}
 	}
 
 	@Override
-	public Bit readBit(FinsIoAddress address) throws FinsMasterException {
-//		try {
-			return null;
-//		} catch (InterruptedException | ExecutionException e) {
-//			throw new FinsMasterException("FINS master exception", e);
-//		}
-	}
-
-	@Override
-	public List<Bit> readBits(FinsIoAddress address, int itemCount) throws FinsMasterException {
-//		try {
-			return null;
-//		} catch (InterruptedException | ExecutionException e) {
-//			throw new FinsMasterException("FINS master exception", e);
-//		}
-	}
-
-	@Override
-	public List<Short> readMultipleWords(List<FinsIoAddress> addresses) throws FinsMasterException {
-//		try {
-			return null;
-//		} catch (InterruptedException | ExecutionException e) {
-//			throw new FinsMasterException("FINS master exception", e);
-//		}
-	}
-
-	@Override
-	public void writeWord(FinsIoAddress address, short item) throws FinsMasterException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void writeWords(FinsIoAddress address, List<Short> items)
-			throws FinsMasterException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void writeMultipleWords(List<FinsIoAddress> addresses, List<Short> items)
-			throws FinsMasterException {
+	public <W extends Word> void writeMultipleWords(final List<FinsIoAddress> addresses, final List<W> items) throws FinsMasterException {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public String readString(final FinsIoAddress address, final int wordLength) throws FinsMasterException {
-		List<Short> words = this.readWords(address, wordLength);
+		List<Word> words = this.readWords(address, wordLength);
 		StringBuffer stringBuffer = new StringBuffer(wordLength * 2);
 		byte[] bytes = new byte[2];
-		for (Short s : words) {
+		for (Word w : words) {
+			final Short s = w.getValue();
 			bytes[1] = (byte)(s & 0xff);
 			bytes[0] = (byte)((s >> 8) & 0xff);
 			try {

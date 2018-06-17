@@ -1,37 +1,24 @@
 package com.siyka.omron.fins;
 
-import java.io.Serializable;
-
-public final class Bit implements Serializable {
+public class Bit implements DataType<Boolean> {
 
 	private static final long serialVersionUID = -1706234047187405546L;
 	
-	private static final byte VALUE_MASK = 0x01;
-	private static final byte FORCED_MASK = 0x02;
-	
-	private final byte bitData;
+	private final boolean value;
 
-	public Bit(byte bitData) {
-		this.bitData = bitData;
+	public Bit(final boolean value) {
+		this.value = value;
 	}
 
-	public boolean getValue() {
-		return ((this.bitData & VALUE_MASK) != 0);
-	}
-	
-	public boolean isForced() {
-		return ((this.bitData & FORCED_MASK) != 0);
-	}
-
-	public byte getBitData() {
-		return this.bitData;
+	public Boolean getValue() {
+		return this.value;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + bitData;
+		result = prime * result + (value ? 1231 : 1237);
 		return result;
 	}
 
@@ -44,9 +31,9 @@ public final class Bit implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		Bit other = (Bit) obj;
-		if (bitData != other.bitData)
+		if (value != other.value)
 			return false;
 		return true;
 	}
-	
+
 }

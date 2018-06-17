@@ -12,9 +12,9 @@ import com.siyka.omron.fins.FinsFrame;
 import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsIoMemoryArea;
+import com.siyka.omron.fins.Word;
 import com.siyka.omron.fins.commands.MemoryAreaWriteBitCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteCommand;
-import com.siyka.omron.fins.commands.MemoryAreaWriteDoubleWordCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteWordCommand;
 
 import io.netty.buffer.ByteBuf;
@@ -58,26 +58,26 @@ public class FinsCommandFrameDecoder implements FinsFrameDecoder {
 					// @Todo
 					//dataItems.add(buffer.readShort());
 				}
-				return new MemoryAreaWriteBitCommand(commandCode, ioAddress, dataItems);
+				return new MemoryAreaWriteBitCommand(ioAddress, dataItems);
 			}
 				
 			case 2: {
 				// Word data
-				final List<Short> dataItems = new ArrayList<>(dataItemCount);
+				final List<Word> dataItems = new ArrayList<>(dataItemCount);
 				for (int i = 0; i < dataItemCount; i++) {
-					dataItems.add(buffer.readShort());
+					dataItems.add(new Word(buffer.readShort()));
 				}
-				return new MemoryAreaWriteWordCommand(commandCode, ioAddress, dataItems);
+				return new MemoryAreaWriteWordCommand(ioAddress, dataItems);
 			}
 				
-			case 4: {
-				// Double word data
-				final List<Integer> dataItems = new ArrayList<>(dataItemCount);
-				for (int i = 0; i < dataItemCount; i++) {
-					dataItems.add(buffer.readInt());
-				}
-				return new MemoryAreaWriteDoubleWordCommand(commandCode, ioAddress, dataItems);
-			}
+//			case 4: {
+//				// Double word data
+//				final List<Integer> dataItems = new ArrayList<>(dataItemCount);
+//				for (int i = 0; i < dataItemCount; i++) {
+//					dataItems.add(buffer.readInt());
+//				}
+//				return new MemoryAreaWriteDoubleWordCommand(commandCode, ioAddress, dataItems);
+//			}
 				
 			default:
 				return null;

@@ -3,12 +3,14 @@ package com.siyka.omron.fins.codec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.siyka.omron.fins.Bit;
+import com.siyka.omron.fins.DataType;
 import com.siyka.omron.fins.FinsFrame;
+import com.siyka.omron.fins.Word;
 import com.siyka.omron.fins.commands.FinsAddressableCommand;
 import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteBitCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteCommand;
-import com.siyka.omron.fins.commands.MemoryAreaWriteDoubleWordCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteWordCommand;
 
 import io.netty.buffer.ByteBuf;
@@ -62,23 +64,29 @@ public class FinsCommandFrameEncoder implements FinsFrameEncoder {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void encodeMemoryAreaWriteCommand(final MemoryAreaWriteCommand<?> command, final ByteBuf buffer) {
+	private void encodeMemoryAreaWriteCommand(final MemoryAreaWriteCommand<? extends DataType<?>> command, final ByteBuf buffer) {
 		buffer.writeShort(command.getItems().size());
 		if (command instanceof MemoryAreaWriteBitCommand) {
-//			encodeMemoryAreaWriteBitCommand((MemoryAreaWriteCommand<Bit>) frame.getPdu(), buffer);
+			encodeMemoryAreaWriteBitCommand((MemoryAreaWriteCommand<Bit>) command, buffer);
 		} else if (command instanceof MemoryAreaWriteWordCommand) {
-			encodeMemoryAreaWriteWordCommand((MemoryAreaWriteCommand<Short>) command, buffer);
-		} else if (command instanceof MemoryAreaWriteDoubleWordCommand) {
-			encodeMemoryAreaWriteDoubleWordCommand((MemoryAreaWriteCommand<Integer>) command, buffer);
+			encodeMemoryAreaWriteWordCommand((MemoryAreaWriteCommand<Word>) command, buffer);
 		}
+//		else if (command instanceof MemoryAreaWriteDoubleWordCommand) {
+//			encodeMemoryAreaWriteDoubleWordCommand((MemoryAreaWriteCommand<Integer>) command, buffer);
+//		}
+	}
+
+	private void encodeMemoryAreaWriteBitCommand(MemoryAreaWriteCommand<Bit> command, ByteBuf buffer) {
+		command.getItems().forEach(bit -> buffer.writeByte(bit.getValue() ? 0x01 : 0x00));
 	}
 	
-	private void encodeMemoryAreaWriteWordCommand(final MemoryAreaWriteCommand<Short> command, final ByteBuf buffer) {
-		command.getItems().forEach(i -> buffer.writeShort(i));
+	private void encodeMemoryAreaWriteWordCommand(final MemoryAreaWriteCommand<Word> command, final ByteBuf buffer) {
+		logger.debug("Doing stuff");
+		command.getItems().forEach(word -> buffer.writeShort(word.getValue()));
 	}
 	
-	private void encodeMemoryAreaWriteDoubleWordCommand(final MemoryAreaWriteCommand<Integer> command, final ByteBuf buffer) {
-		command.getItems().forEach(i -> buffer.writeInt(i));
-	}
+//	private void encodeMemoryAreaWriteDoubleWordCommand(final MemoryAreaWriteCommand<Integer> command, final ByteBuf buffer) {
+//		command.getItems().forEach(i -> buffer.writeInt(i));
+//	}
 
 }

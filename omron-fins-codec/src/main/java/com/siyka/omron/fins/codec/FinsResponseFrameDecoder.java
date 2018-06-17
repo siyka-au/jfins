@@ -11,8 +11,6 @@ import com.siyka.omron.fins.FinsCommandCode;
 import com.siyka.omron.fins.FinsEndCode;
 import com.siyka.omron.fins.FinsFrame;
 import com.siyka.omron.fins.FinsHeader;
-import com.siyka.omron.fins.FinsIoAddress;
-import com.siyka.omron.fins.FinsIoMemoryArea;
 import com.siyka.omron.fins.commands.FinsAddressableCommand;
 import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
 import com.siyka.omron.fins.responses.FinsSimpleResponse;
