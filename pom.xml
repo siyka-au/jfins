@@ -1,15 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.siyka</groupId>
+	<parent>
+		<groupId>com.siyka</groupId>
+		<artifactId>omron-fins-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>omron-fins-parent/pom.xml</relativePath>
+	</parent>
+
 	<artifactId>omron-fins</artifactId>
-	<version>0.0.1</version>
 	<packaging>pom</packaging>
 
 	<name>Omron FINS</name>
 	<description>High-performance, non-blocking, zero-buffer-copying Omron FINS for Java</description>
+
+	<organization>
+		<name>Siyka</name>
+		<url>https://siyka.com</url>
+	</organization>
 
 	<modules>
 		<module>omron-fins-parent</module>
@@ -20,4 +31,45 @@
 		<module>omron-fins-udp-master</module>
 		<module>omron-fins-udp-slave</module>
 	</modules>
+
+	<scm>
+		<url>scm:git:https://github.com/siyka-au/omron-fins.git</url>
+		<developerConnection>Michael Alleblas</developerConnection>
+	</scm>
+
+	<distributionManagement>
+		<repository>
+			<id>your-repo-id</id>
+			<name>Your Repo Name</name>
+			<url>git:releases://git@github.com:siyka-au/repository.git</url>
+		</repository>
+		<snapshotRepository>
+			<id>your-snapshot-repo-id</id>
+			<name>Your Snapshot Repo Name</name>
+			<url>git:snapshots://git@github.com:siyka-au/repository.git</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+			</plugin>
+		</plugins>
+		<extensions>
+			<extension>
+				<groupId>ar.com.synergian</groupId>
+				<artifactId>wagon-git</artifactId>
+				<version>0.3.0</version>
+			</extension>
+		</extensions>
+	</build>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>synergian-repo</id>
+			<url>https://raw.github.com/synergian/wagon-git/releases</url>
+		</pluginRepository>
+	</pluginRepositories>
 </project>
