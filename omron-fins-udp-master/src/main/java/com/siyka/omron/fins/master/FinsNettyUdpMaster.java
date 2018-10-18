@@ -17,17 +17,17 @@ import org.slf4j.LoggerFactory;
 import com.siyka.omron.fins.Bit;
 import com.siyka.omron.fins.FinsEndCode;
 import com.siyka.omron.fins.FinsFrame;
-import com.siyka.omron.fins.FinsSimpleFrame;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsNodeAddress;
+import com.siyka.omron.fins.FinsSimpleFrame;
 import com.siyka.omron.fins.codec.FinsFrameBuilder;
 import com.siyka.omron.fins.codec.FinsFrameUdpCodec;
-import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteBitCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteWordCommand;
-import com.siyka.omron.fins.responses.MemoryAreaReadBitResponse;
-import com.siyka.omron.fins.responses.MemoryAreaReadWordResponse;
 import com.siyka.omron.fins.responses.MemoryAreaWriteResponse;
+import com.siyka.omron.fins.wip.MemoryAreaReadBitResponse;
+import com.siyka.omron.fins.wip.MemoryAreaReadCommand;
+import com.siyka.omron.fins.wip.MemoryAreaReadWordResponse;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -53,7 +53,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 	
 	private final AtomicInteger serviceAddress = new AtomicInteger(0);
 	
-	private CompletableFuture<FinsSimpleFrame> sendFuture;
+	private CompletableFuture<FinsFrame> sendFuture;
 
 	// TODO make configurable
 	private int retries = 3;

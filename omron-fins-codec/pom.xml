@@ -13,7 +13,7 @@
 
 	<name>Omron FINS Codec</name>
 	<description>Omron FINS Netty codecs</description>
-	<artifactId>omron-fins-codec</artifactId>
+	<artifactId>omron-fins-netty-codec</artifactId>
 
 	<dependencies>
 		<dependency>
@@ -21,6 +21,11 @@
 			<artifactId>omron-fins-core</artifactId>
 		</dependency>
 
+
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-buffer</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-codec</artifactId>

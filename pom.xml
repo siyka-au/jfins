@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -14,10 +15,13 @@
 	<modules>
 		<module>omron-fins-parent</module>
 		<module>omron-fins-core</module>
-		<module>omron-fins-codec</module>
+		<module>omron-fins-netty-codec</module>
+		<!-- <module>omron-fins-grizzly-codec</module> -->
 		<module>omron-fins-master</module>
 		<module>omron-fins-slave</module>
-		<!-- <module>omron-fins-udp-master</module> -->
-		<module>omron-fins-udp-slave</module>
+		<module>omron-fins-netty-udp-master</module>
+		<!-- <module>omron-fins-netty-udp-slave</module> -->
+		<!-- <module>omron-fins-grizzly-udp-master</module> -->
+		<!-- <module>omron-fins-grizzly-udp-slave</module> -->
 	</modules>
 </project>

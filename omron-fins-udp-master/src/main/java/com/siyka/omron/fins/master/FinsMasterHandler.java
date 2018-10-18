@@ -3,13 +3,13 @@ package com.siyka.omron.fins.master;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.siyka.omron.fins.FinsSimpleFrame;
+import com.siyka.omron.fins.FinsFrame;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.ReferenceCountUtil;
 
-public class FinsMasterHandler extends SimpleChannelInboundHandler<FinsSimpleFrame> {
+public class FinsMasterHandler extends SimpleChannelInboundHandler<FinsFrame> {
 
 	final static Logger logger = LoggerFactory.getLogger(FinsMasterHandler.class);
 

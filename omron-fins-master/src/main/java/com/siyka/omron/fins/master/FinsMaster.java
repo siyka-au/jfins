@@ -35,4 +35,5 @@ public interface FinsMaster extends AutoCloseable {
 	public String readString(FinsNodeAddress destination, FinsIoAddress address, int wordLength) throws FinsMasterException;
 
 	public String readString(FinsNodeAddress destination, FinsIoAddress address, short wordLength) throws FinsMasterException;
+	
 }
