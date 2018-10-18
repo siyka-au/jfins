@@ -1,6 +1,7 @@
 package com.siyka.omron.fins.master;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import com.siyka.omron.fins.Bit;
 import com.siyka.omron.fins.FinsIoAddress;
@@ -8,32 +9,32 @@ import com.siyka.omron.fins.FinsNodeAddress;
 
 public interface FinsMaster extends AutoCloseable {
 
-	public void connect() throws FinsMasterException;
+	public CompletableFuture<Void> connect();
 
-	public void disconnect();
+	public CompletableFuture<Void> disconnect();
 
-	public short readWord(FinsNodeAddress destination, FinsIoAddress address) throws FinsMasterException;
+	public CompletableFuture<Short> readWord(FinsNodeAddress destination, FinsIoAddress address);
 
-	public List<Short> readWords(FinsNodeAddress destination, FinsIoAddress address, short itemCount) throws FinsMasterException;
+	public CompletableFuture<List<Short>> readWords(FinsNodeAddress destination, FinsIoAddress address, short itemCount);
 
-	public List<Short> readWords(FinsNodeAddress destination, FinsIoAddress address, int itemCount) throws FinsMasterException;
+	public CompletableFuture<List<Short>> readWords(FinsNodeAddress destination, FinsIoAddress address, int itemCount);
 
-	public Bit readBit(FinsNodeAddress destination, FinsIoAddress address) throws FinsMasterException;
+	public CompletableFuture<Bit> readBit(FinsNodeAddress destination, FinsIoAddress address);
 
-	public List<Bit> readBits(FinsNodeAddress destination, FinsIoAddress address, short itemCount) throws FinsMasterException;
+	public CompletableFuture<List<Bit>> readBits(FinsNodeAddress destination, FinsIoAddress address, short itemCount);
 
-	public List<Bit> readBits(FinsNodeAddress destination, FinsIoAddress address, int itemCount) throws FinsMasterException;
+	public CompletableFuture<List<Bit>> readBits(FinsNodeAddress destination, FinsIoAddress address, int itemCount);
 
-	public List<Short> readMultipleWords(FinsNodeAddress destination, List<FinsIoAddress> addresses) throws FinsMasterException;
+	public CompletableFuture<List<Short>> readMultipleWords(FinsNodeAddress destination, List<FinsIoAddress> addresses);
 
-	public void writeWord(FinsNodeAddress destination, FinsIoAddress address, short item) throws FinsMasterException;
+	public CompletableFuture<Void> writeWord(FinsNodeAddress destination, FinsIoAddress address, short item);
 
-	public void writeWords(FinsNodeAddress destination, FinsIoAddress address, List<Short> items) throws FinsMasterException;
+	public CompletableFuture<Void> writeWords(FinsNodeAddress destination, FinsIoAddress address, List<Short> items);
 
-	public void writeMultipleWords(FinsNodeAddress destination, List<FinsIoAddress> addresses, List<Short> items) throws FinsMasterException;
+	public CompletableFuture<Void> writeMultipleWords(FinsNodeAddress destination, List<FinsIoAddress> addresses, List<Short> items);
 
-	public String readString(FinsNodeAddress destination, FinsIoAddress address, int wordLength) throws FinsMasterException;
+	public CompletableFuture<String> readString(FinsNodeAddress destination, FinsIoAddress address, int wordLength);
 
-	public String readString(FinsNodeAddress destination, FinsIoAddress address, short wordLength) throws FinsMasterException;
-	
+	public CompletableFuture<String> readString(FinsNodeAddress destination, FinsIoAddress address, short wordLength);
+
 }

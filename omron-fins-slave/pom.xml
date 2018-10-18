@@ -18,7 +18,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>omron-fins-codec</artifactId>
+			<artifactId>omron-fins-core</artifactId>
 		</dependency>
 
 		<dependency>

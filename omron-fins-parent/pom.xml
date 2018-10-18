@@ -14,9 +14,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<io.netty.version>4.1.25.Final</io.netty.version>
-		<com.google.guava.version>25.1-jre</com.google.guava.version>
-		<org.slf4j.version>1.7.21</org.slf4j.version>
+		<io.netty.version>4.1.30.Final</io.netty.version>
+		<com.google.guava.version>26.0-jre</com.google.guava.version>
+		<org.slf4j.version>1.7.25</org.slf4j.version>
 		<junit.junit.version>4.12</junit.junit.version>
 	</properties>
 
@@ -25,11 +25,6 @@
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>omron-fins-core</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>omron-fins-codec</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -45,12 +40,17 @@
 
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>omron-fins-udp-master</artifactId>
+				<artifactId>omron-fins-netty-codec</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>omron-fins-udp-slave</artifactId>
+				<artifactId>omron-fins-netty-udp-master</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>omron-fins-netty-udp-slave</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
@@ -68,12 +68,6 @@
 				<groupId>io.netty</groupId>
 				<artifactId>netty-buffer</artifactId>
 				<version>${io.netty.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.glassfish.grizzly</groupId>
-				<artifactId>grizzly-framework</artifactId>
-				<version>2.4.3</version>
 			</dependency>
 
 			<dependency>
