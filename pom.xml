@@ -6,7 +6,7 @@
 
 	<groupId>com.siyka</groupId>
 	<artifactId>omron-fins</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Omron FINS</name>
@@ -14,13 +14,16 @@
 
 	<modules>
 		<module>omron-fins-parent</module>
-		<module>omron-fins-core</module>
-		<module>omron-fins-netty-codec</module>
-		<!-- <module>omron-fins-grizzly-codec</module> -->
+		
+		<module>omron-fins-core</module>		
 		<module>omron-fins-master</module>
 		<module>omron-fins-slave</module>
+		
+		<module>omron-fins-netty-codec</module>
 		<module>omron-fins-netty-udp-master</module>
 		<!-- <module>omron-fins-netty-udp-slave</module> -->
+		
+		<!-- <module>omron-fins-grizzly-codec</module> -->
 		<!-- <module>omron-fins-grizzly-udp-master</module> -->
 		<!-- <module>omron-fins-grizzly-udp-slave</module> -->
 	</modules>

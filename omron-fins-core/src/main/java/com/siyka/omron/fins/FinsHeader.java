@@ -15,14 +15,6 @@ public class FinsHeader implements Serializable {
 	private final FinsNodeAddress sourceAddress;
 	private final byte serviceAddress;
 
-	public FinsHeader(
-			final MessageType messageType,
-			final FinsNodeAddress destinationAddress,
-			final FinsNodeAddress sourceAddress,
-			final byte serviceAddress) {
-		this(true, messageType, ResponseAction.RESPONSE_NOT_REQUIRED, (byte) 0x02, destinationAddress, sourceAddress, serviceAddress);
-	}
-	
 	public FinsHeader(final boolean useGateway,
 			final MessageType messageType,
 			final ResponseAction responseAction,
@@ -77,6 +69,104 @@ public class FinsHeader implements Serializable {
 	
 	public static enum ResponseAction {
 		RESPONSE_REQUIRED, RESPONSE_NOT_REQUIRED;
+	}
+	
+	public static class Builder {
+		
+		private boolean useGateway;
+		private MessageType messageType;
+		private ResponseAction responseAction;
+		private byte gatewayCount;
+		private FinsNodeAddress destinationAddress;
+		private FinsNodeAddress sourceAddress;
+		private byte serviceAddress;
+		
+		public Builder() {
+			this.useGateway = true;
+			this.gatewayCount = 0x02;
+		}
+
+		public boolean isUseGateway() {
+			return useGateway;
+		}
+
+		public Builder setUseGateway(boolean useGateway) {
+			this.useGateway = useGateway;
+			return this;
+		}
+
+		public MessageType getMessageType() {
+			return messageType;
+		}
+
+		public Builder setMessageType(MessageType messageType) {
+			this.messageType = messageType;
+			return this;
+		}
+
+		public ResponseAction getResponseAction() {
+			return responseAction;
+		}
+
+		public Builder setResponseAction(ResponseAction responseAction) {
+			this.responseAction = responseAction;
+			return this;
+		}
+
+		public byte getGatewayCount() {
+			return gatewayCount;
+		}
+
+		public Builder setGatewayCount(byte gatewayCount) {
+			this.gatewayCount = gatewayCount;
+			return this;
+		}
+
+		public FinsNodeAddress getDestinationAddress() {
+			return destinationAddress;
+		}
+
+		public Builder setDestinationAddress(FinsNodeAddress destinationAddress) {
+			this.destinationAddress = destinationAddress;
+			return this;
+		}
+
+		public FinsNodeAddress getSourceAddress() {
+			return sourceAddress;
+		}
+
+		public Builder setSourceAddress(FinsNodeAddress sourceAddress) {
+			this.sourceAddress = sourceAddress;
+			return this;
+		}
+
+		public byte getServiceAddress() {
+			return serviceAddress;
+		}
+
+		public Builder setServiceAddress(byte serviceAddress) {
+			this.serviceAddress = serviceAddress;
+			return this;
+		}
+		
+		public FinsHeader build() {
+			return new FinsHeader(this.useGateway, this.messageType, this.responseAction, this.gatewayCount, this.destinationAddress, this.sourceAddress, this.serviceAddress);
+		}
+		
+		public static Builder defaultCommandBuilder() {
+			final Builder builder = new Builder();
+			builder.setMessageType(MessageType.COMMAND);
+			builder.setResponseAction(ResponseAction.RESPONSE_REQUIRED);
+			return builder;
+		}
+		
+		public static Builder defaultResponseBuilder() {
+			final Builder builder = new Builder();
+			builder.setMessageType(MessageType.RESPONSE);
+			builder.setResponseAction(ResponseAction.RESPONSE_NOT_REQUIRED);
+			return builder;
+		}
+		
 	}
 	
 }

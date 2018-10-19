@@ -11,7 +11,7 @@
 
 	<name>Omron FINS/TCP Master</name>
 	<description>Omron FINS/TCP master</description>
-	<artifactId>omron-fins-tcp-master</artifactId>
+	<artifactId>omron-fins-netty-tcp-master</artifactId>
 
 	<dependencies>
 		<dependency>

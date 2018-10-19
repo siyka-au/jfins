@@ -13,9 +13,13 @@ public final class MemoryAreaReadCommand extends FinsAddressableCommand {
 		super(FinsCommandCode.MEMORY_AREA_READ, address);
 		this.itemCount = itemCount;
 	}
-	
+
 	public MemoryAreaReadCommand(final FinsHeader header, final FinsIoAddress address, final int itemCount) {
 		this(address, (short) itemCount);
 	}
-	
+
+	public short getItemCount() {
+		return itemCount;
+	}
+
 }

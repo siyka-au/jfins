@@ -15,5 +15,5 @@ public class MemoryAreaWriteBitCommand extends MemoryAreaWriteCommand<Bit> {
 	public String toString() {
 		return String.format("%s itemType[BIT]", super.toString());
 	}
-	
+
 }

@@ -11,19 +11,19 @@
 		<relativePath>../omron-fins-parent/pom.xml</relativePath>
 	</parent>
 
-	<name>Omron FINS Slave</name>
-	<description>Omron FINS UDP slave</description>
-	<artifactId>omron-fins-netty-udp-slave</artifactId>
+	<name>Omron FINS Master</name>
+	<description>Omron FINS UDP master</description>
+	<artifactId>omron-fins-udp-master</artifactId>
 
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>omron-fins-slave</artifactId>
+			<artifactId>omron-fins-master</artifactId>
 		</dependency>
 
 		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-handler</artifactId>
+			<groupId>org.glassfish.grizzly</groupId>
+			<artifactId>grizzly-framework</artifactId>
 		</dependency>
 
 		<dependency>

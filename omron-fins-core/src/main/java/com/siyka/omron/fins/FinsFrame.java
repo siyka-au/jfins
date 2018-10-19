@@ -2,12 +2,12 @@ package com.siyka.omron.fins;
 
 import java.util.Objects;
 
-public class FinsFrame {
+public class FinsFrame<P extends FinsPdu> {
 
 	private final FinsHeader header;
-	private final FinsPdu pdu;
+	private final P pdu;
 
-	public FinsFrame(final FinsHeader header, final FinsPdu pdu) {
+	public FinsFrame(final FinsHeader header, final P pdu) {
 		Objects.requireNonNull(header);
 		Objects.requireNonNull(pdu);
 		this.header = header;
@@ -18,7 +18,7 @@ public class FinsFrame {
 		return this.header;
 	}
 
-	public FinsPdu getPdu() {
+	public P getPdu() {
 		return this.pdu;
 	}
 

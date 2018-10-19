@@ -12,8 +12,8 @@
 	</parent>
 
 	<name>Omron FINS Master</name>
-	<description>Omron FINS UDP master</description>
-	<artifactId>omron-fins-udp-master</artifactId>
+	<description>Omron FINS Netty UDP master</description>
+	<artifactId>omron-fins-netty-udp-master</artifactId>
 
 	<dependencies>
 		<dependency>
@@ -38,5 +38,12 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-core -->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.2.3</version>
+		</dependency>
+
 	</dependencies>
 </project>

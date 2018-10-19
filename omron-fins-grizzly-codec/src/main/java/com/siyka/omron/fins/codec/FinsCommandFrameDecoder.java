@@ -13,7 +13,6 @@ import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsIoMemoryArea;
 import com.siyka.omron.fins.FinsNodeAddress;
-import com.siyka.omron.fins.commands.FinsCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteBitCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteDoubleWordCommand;
@@ -22,15 +21,13 @@ import com.siyka.omron.fins.commands.MemoryAreaWriteWordCommand;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.DecoderException;
 
-public class FinsCommandFrameDecoder implements FinsFrameDecoder<FinsCommand> {
+public class FinsCommandFrameDecoder implements FinsFrameDecoder {
 
+	@SuppressWarnings("unused")
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
-	private final FinsHeaderCodec headerCodec = new FinsHeaderCodec();
-	
 	@Override
-	public FinsFrame<FinsCommand> decode(final ByteBuf buffer) throws DecoderException {
-		logger.debug("Decoding FINS command frame");
+	public FinsFrame decode(final ByteBuf buffer) throws DecoderException {
 		final byte icf = buffer.readByte();
 		// Skip the reserved field
 		buffer.readByte();
@@ -57,7 +54,7 @@ public class FinsCommandFrameDecoder implements FinsFrameDecoder<FinsCommand> {
 		
 		switch (commandCode) {
 			case MEMORY_AREA_WRITE:
-				return new FinsFrame<>(header, decodeMemoryAreaWrite(commandCode, buffer));
+				return new FinsFrame(header, decodeMemoryAreaWrite(commandCode, buffer));
 
 			default:
 				throw new DecoderException(String.format("Command code not implemented or supported", commandCode));
