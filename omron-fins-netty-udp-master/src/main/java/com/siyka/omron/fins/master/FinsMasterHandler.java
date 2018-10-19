@@ -25,7 +25,7 @@ public class FinsMasterHandler extends SimpleChannelInboundHandler<FinsFrame<Fin
 	}
 
 	@Override
-	protected void channelRead0(final ChannelHandlerContext ctx, final FinsFrame<FinsResponse> frame) throws Exception {
+	protected void channelRead0(final ChannelHandlerContext context, final FinsFrame<FinsResponse> frame) throws Exception {
 		Optional.ofNullable(this.futures.remove(frame.getHeader().getServiceAddress()))
 			.ifPresent(f -> f.complete(frame));
 		ReferenceCountUtil.release(frame);

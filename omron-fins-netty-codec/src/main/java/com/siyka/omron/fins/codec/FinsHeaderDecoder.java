@@ -4,32 +4,10 @@ import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.NodeAddress;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
-public class FinsHeaderCodec {
+public class FinsHeaderDecoder implements Decoder<FinsHeader> {
 	
-	public static Encoder<FinsHeader> encoder = header -> {
-		final ByteBuf buffer = Unpooled.buffer();
-		
-		byte icf = 0x00;
-		if (header.useGateway() == true) icf = (byte) (icf | 0x80);
-		if (header.getMessageType() == FinsHeader.MessageType.RESPONSE) icf = (byte) (icf | 0x40);
-		if (header.getResponseAction() == FinsHeader.ResponseAction.RESPONSE_NOT_REQUIRED) icf = (byte) (icf | 0x01);
-		buffer.writeByte(icf);
-		buffer.writeByte(0x00);
-		buffer.writeByte(header.getGatewayCount());
-		buffer.writeByte(header.getDestinationAddress().getNetwork());
-		buffer.writeByte(header.getDestinationAddress().getNode());
-		buffer.writeByte(header.getDestinationAddress().getUnit());
-		buffer.writeByte(header.getSourceAddress().getNetwork());
-		buffer.writeByte(header.getSourceAddress().getNode());
-		buffer.writeByte(header.getSourceAddress().getUnit());
-		buffer.writeByte(header.getServiceAddress());
-		
-		return buffer;
-	};
-	
-	public static Decoder<FinsHeader> decoder = buffer -> {
+	public FinsHeader decode(final ByteBuf buffer) {
 		final byte icf = buffer.readByte();
 		// Skip the reserved field
 		buffer.readByte();
@@ -49,6 +27,6 @@ public class FinsHeaderCodec {
 				new NodeAddress(destinationNetwork, destinationNode, destinationUnit),
 				new NodeAddress(sourceNetwork, sourceNode, sourceUnit),
 				serviceAddress);
-	};
+	}
 	
 }

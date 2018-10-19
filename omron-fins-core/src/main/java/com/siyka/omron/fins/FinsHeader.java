@@ -11,16 +11,16 @@ public class FinsHeader implements Serializable {
 	private final MessageType messageType;
 	private final ResponseAction responseAction;
 	private final byte gatewayCount;
-	private final FinsNodeAddress destinationAddress;
-	private final FinsNodeAddress sourceAddress;
+	private final NodeAddress destinationAddress;
+	private final NodeAddress sourceAddress;
 	private final byte serviceAddress;
 
 	public FinsHeader(final boolean useGateway,
 			final MessageType messageType,
 			final ResponseAction responseAction,
 			final byte gatewayCount,
-			final FinsNodeAddress destinationAddress,
-			final FinsNodeAddress sourceAddress,
+			final NodeAddress destinationAddress,
+			final NodeAddress sourceAddress,
 			final byte serviceAddress) {
 		Objects.requireNonNull(messageType);
 		Objects.requireNonNull(responseAction);
@@ -51,11 +51,11 @@ public class FinsHeader implements Serializable {
 		return this.gatewayCount;
 	}
 
-	public FinsNodeAddress getDestinationAddress() {
+	public NodeAddress getDestinationAddress() {
 		return this.destinationAddress;
 	}
 
-	public FinsNodeAddress getSourceAddress() {
+	public NodeAddress getSourceAddress() {
 		return this.sourceAddress;
 	}
 
@@ -77,8 +77,8 @@ public class FinsHeader implements Serializable {
 		private MessageType messageType;
 		private ResponseAction responseAction;
 		private byte gatewayCount;
-		private FinsNodeAddress destinationAddress;
-		private FinsNodeAddress sourceAddress;
+		private NodeAddress destinationAddress;
+		private NodeAddress sourceAddress;
 		private byte serviceAddress;
 		
 		public Builder() {
@@ -122,20 +122,20 @@ public class FinsHeader implements Serializable {
 			return this;
 		}
 
-		public FinsNodeAddress getDestinationAddress() {
+		public NodeAddress getDestinationAddress() {
 			return destinationAddress;
 		}
 
-		public Builder setDestinationAddress(FinsNodeAddress destinationAddress) {
+		public Builder setDestinationAddress(NodeAddress destinationAddress) {
 			this.destinationAddress = destinationAddress;
 			return this;
 		}
 
-		public FinsNodeAddress getSourceAddress() {
+		public NodeAddress getSourceAddress() {
 			return sourceAddress;
 		}
 
-		public Builder setSourceAddress(FinsNodeAddress sourceAddress) {
+		public Builder setSourceAddress(NodeAddress sourceAddress) {
 			this.sourceAddress = sourceAddress;
 			return this;
 		}

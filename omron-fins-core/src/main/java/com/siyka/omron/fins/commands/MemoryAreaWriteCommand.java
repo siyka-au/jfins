@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.Objects;
 
 import com.siyka.omron.fins.FinsCommandCode;
-import com.siyka.omron.fins.FinsIoAddress;
+import com.siyka.omron.fins.IoAddress;
 
-public abstract class MemoryAreaWriteCommand<T> extends FinsAddressableCommand {
+public abstract class MemoryAreaWriteCommand<T> extends AddressableCommand<MemoryAreaWriteCommand<T>> {
 
 	private final List<T> dataItems;
 	
-	public MemoryAreaWriteCommand(final FinsCommandCode commandCode, final FinsIoAddress ioAddress, final List<T> dataItems) {
-		super(commandCode, ioAddress);
+	public MemoryAreaWriteCommand(final IoAddress ioAddress, final List<T> dataItems) {
+		super(FinsCommandCode.MEMORY_AREA_WRITE, ioAddress);
 		Objects.requireNonNull(dataItems);
 		if (dataItems.getClass().getSimpleName().equals("UnmodifiableCollection")) {
 			this.dataItems = dataItems;

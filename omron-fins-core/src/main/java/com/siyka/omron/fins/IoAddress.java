@@ -2,38 +2,38 @@ package com.siyka.omron.fins;
 
 import java.io.Serializable;
 
-public final class FinsIoAddress implements Serializable {
+public final class IoAddress implements Serializable {
 
 	private static final long serialVersionUID = 256655711718324689L;
 	
-	private final FinsIoMemoryArea memoryArea;
+	private final IoMemoryArea memoryArea;
 	private final short address;
 	private final byte bitOffset;
 
-	public FinsIoAddress(final FinsIoMemoryArea memoryArea, final short address) {
+	public IoAddress(final IoMemoryArea memoryArea, final short address) {
 		this(memoryArea, address, (byte) 0);
 	}
 	
-	public FinsIoAddress(final FinsIoMemoryArea memoryArea, final int address) {
+	public IoAddress(final IoMemoryArea memoryArea, final int address) {
 		this(memoryArea, (short) address);
 	}
 	
-	public FinsIoAddress(final FinsIoMemoryArea memoryArea, final int address, final int bitOffset) {
+	public IoAddress(final IoMemoryArea memoryArea, final int address, final int bitOffset) {
 		this(memoryArea, (short) address, (byte) bitOffset);
 	}
 	
-	public FinsIoAddress(final FinsIoMemoryArea memoryArea, final short address, final int bitOffset) {
+	public IoAddress(final IoMemoryArea memoryArea, final short address, final int bitOffset) {
 		this(memoryArea, address, (byte) bitOffset);
 	}
 	
-	public FinsIoAddress(final FinsIoMemoryArea memoryArea, final short address, final byte bitOffset) {
+	public IoAddress(final IoMemoryArea memoryArea, final short address, final byte bitOffset) {
 		super();
 		this.memoryArea = memoryArea;
 		this.address = address;
 		this.bitOffset = bitOffset;
 	}
 
-	public FinsIoMemoryArea getMemoryArea() {
+	public IoMemoryArea getMemoryArea() {
 		return this.memoryArea;
 	}
 
@@ -69,7 +69,7 @@ public final class FinsIoAddress implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		FinsIoAddress other = (FinsIoAddress) obj;
+		IoAddress other = (IoAddress) obj;
 		if (address != other.address)
 			return false;
 		if (bitOffset != other.bitOffset)

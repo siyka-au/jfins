@@ -5,8 +5,9 @@ import com.siyka.omron.fins.FinsPdu;
 
 import io.netty.buffer.ByteBuf;
 
+@FunctionalInterface
 public interface FinsFrameEncoder<T extends FinsPdu> {
 
-	public ByteBuf encode(final FinsFrame<T> finsFrame);
+	public ByteBuf encode(final FinsFrame finsFrame);
 	
 }

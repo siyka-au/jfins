@@ -2,13 +2,12 @@ package com.siyka.omron.fins.commands;
 
 import java.util.List;
 
-import com.siyka.omron.fins.FinsCommandCode;
-import com.siyka.omron.fins.FinsIoAddress;
+import com.siyka.omron.fins.IoAddress;
 
 public class MemoryAreaWriteDoubleWordCommand extends MemoryAreaWriteCommand<Integer> {
 
-	public MemoryAreaWriteDoubleWordCommand(final FinsCommandCode commandCode, final FinsIoAddress ioAddress, final List<Integer> dataItems) {
-		super(commandCode, ioAddress, dataItems);
+	public MemoryAreaWriteDoubleWordCommand(final IoAddress ioAddress, final List<Integer> dataItems) {
+		super(ioAddress, dataItems);
 	}
 
 	public String toString() {

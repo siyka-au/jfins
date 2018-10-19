@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.siyka.omron.fins.FinsFrame;
 import com.siyka.omron.fins.commands.FinsCommand;
-import com.siyka.omron.fins.wip.MemoryAreaReadCommand;
+import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -16,23 +16,20 @@ public class FinsCommandFrameEncoder implements FinsFrameEncoder<FinsCommand> {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
-	private final FinsHeaderCodec headerCodec = new FinsHeaderCodec();
-	
 	@Override
-	public ByteBuf encode(final FinsFrame<FinsCommand> frame) {
+	public ByteBuf encode(final FinsFrame frame) {
 		logger.debug("Encoding FINS command frame");
 		try {
 			final ByteBuf buffer = Unpooled.buffer();
 			
-			headerCodec.encode(buffer, frame.getHeader());
+			FinsHeaderCodec.encoder.encode(frame.getHeader());
 			
-			buffer.writeShort(frame.getPdu().getCommandCode().getValue());
             switch (frame.getPdu().getCommandCode()) {
                 case MEMORY_AREA_READ:
                 	logger.debug("Encoding FINS MEMORY_AREA_READ command frame");
                 	if (frame.getPdu() instanceof MemoryAreaReadCommand) {
                 		logger.debug("Encoding FINS MemoryAreaReadCommand");
-                		encodeMemoryAreaReadCommand(buffer, (MemoryAreaReadCommand) frame.getPdu());
+//                		encodeMemoryAreaReadCommand(buffer, (MemoryAreaReadCommand) frame.getPdu());
                 	}
                     break;
                     
@@ -43,13 +40,6 @@ public class FinsCommandFrameEncoder implements FinsFrameEncoder<FinsCommand> {
         } finally {
             ReferenceCountUtil.release(frame);
         }
-	}
-
-	private void encodeMemoryAreaReadCommand(final ByteBuf buffer, final MemoryAreaReadCommand command) {
-		buffer.writeByte(command.getIoAddress().getMemoryArea().getValue());
-		buffer.writeShort(command.getIoAddress().getAddress());
-		buffer.writeByte(command.getIoAddress().getBitOffset());
-		buffer.writeShort(command.getItemCount());
 	}
 
 }

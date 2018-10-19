@@ -7,9 +7,9 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.siyka.omron.fins.FinsIoAddress;
-import com.siyka.omron.fins.FinsIoMemoryArea;
-import com.siyka.omron.fins.FinsNodeAddress;
+import com.siyka.omron.fins.IoAddress;
+import com.siyka.omron.fins.IoMemoryArea;
+import com.siyka.omron.fins.NodeAddress;
 
 public class Testing {
 
@@ -20,10 +20,10 @@ public class Testing {
 		final FinsMaster master = new FinsNettyUdpMaster(
 			new InetSocketAddress("192.168.250.10", 9600),
 			new InetSocketAddress("0.0.0.0", 9601),
-			new FinsNodeAddress(0,  2,  0)
+			new NodeAddress(0,  2,  0)
 		);
 		
-		FinsNodeAddress destNode = new FinsNodeAddress(0,  10,  0);
+		NodeAddress destNode = new NodeAddress(0,  10,  0);
 		
 		logger.info("Connecting...");
 		master.connect().get();
@@ -33,7 +33,7 @@ public class Testing {
 //		System.out.println(String.format("%s", s.trim()));
 		
 		logger.info("Sending read command");
-		List<Short> words = master.readWords(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), 10).get();
+		List<Short> words = master.readWords(destNode, new IoAddress(IoMemoryArea.DM_WORD, 10000), 10).get();
 //				.thenAccept(words -> {
 					logger.info("Received words");
 					int i = 0;
@@ -44,6 +44,7 @@ public class Testing {
 //				})
 //				.thenRun(master::disconnect)
 //				.get();
+		master.disconnect().get();
 		
 	}
 

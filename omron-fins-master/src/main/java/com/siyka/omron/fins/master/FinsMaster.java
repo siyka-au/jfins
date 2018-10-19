@@ -3,8 +3,8 @@ package com.siyka.omron.fins.master;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.siyka.omron.fins.FinsIoAddress;
-import com.siyka.omron.fins.FinsNodeAddress;
+import com.siyka.omron.fins.IoAddress;
+import com.siyka.omron.fins.NodeAddress;
 
 public interface FinsMaster {
 
@@ -14,8 +14,8 @@ public interface FinsMaster {
 
 
 
-	public CompletableFuture<List<Short>> readWords(FinsNodeAddress destination, FinsIoAddress address, short itemCount);
-	public CompletableFuture<List<Short>> readWords(FinsNodeAddress destination, FinsIoAddress address, int itemCount);
+	public CompletableFuture<List<Short>> readWords(NodeAddress destination, IoAddress address, short itemCount);
+	public CompletableFuture<List<Short>> readWords(NodeAddress destination, IoAddress address, int itemCount);
 //	public CompletableFuture<Short> readWord(FinsNodeAddress destination, FinsIoAddress address);
 //
 //	public CompletableFuture<String> readString(FinsNodeAddress destination, FinsIoAddress address, short wordLength);

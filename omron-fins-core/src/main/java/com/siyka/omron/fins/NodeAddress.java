@@ -2,7 +2,7 @@ package com.siyka.omron.fins;
 
 import java.io.Serializable;
 
-public final class FinsNodeAddress implements Serializable {
+public final class NodeAddress implements Serializable {
 
 	private static final long serialVersionUID = -675204641052490639L;
 	
@@ -10,13 +10,13 @@ public final class FinsNodeAddress implements Serializable {
 	private final byte node;
 	private final byte unit;
 
-	public FinsNodeAddress(final byte network, final byte node, final byte unit) {
+	public NodeAddress(final byte network, final byte node, final byte unit) {
 		this.network = network;
 		this.node = node;
 		this.unit = unit;
 	}
 
-	public FinsNodeAddress(final int network, final int node, final int unit) {
+	public NodeAddress(final int network, final int node, final int unit) {
 		this((byte) network, (byte) node, (byte) unit);
 	}
 
@@ -50,7 +50,7 @@ public final class FinsNodeAddress implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		FinsNodeAddress other = (FinsNodeAddress) obj;
+		NodeAddress other = (NodeAddress) obj;
 		if (network != other.network)
 			return false;
 		if (node != other.node)

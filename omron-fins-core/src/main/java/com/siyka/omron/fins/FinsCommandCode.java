@@ -24,7 +24,9 @@ public enum FinsCommandCode {
 	CPU_UNIT_DATA_READ(0x0501),
 	CONNECTION_DATA_READ(0x0502),
 	CPU_UNIT_STATUS_READ(0x0601),
-	CYCLE_TIME_READ(0x0620);
+	CYCLE_TIME_READ(0x0620),
+	
+	UNKNOWN(0xffff);
 
 	private final short commandCodeValue;
 
