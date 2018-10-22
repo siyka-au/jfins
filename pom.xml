@@ -22,9 +22,7 @@
 		<module>omron-fins-netty-codec</module>
 		<module>omron-fins-netty-udp-master</module>
 		<!-- <module>omron-fins-netty-udp-slave</module> -->
-		
-		<!-- <module>omron-fins-grizzly-codec</module> -->
-		<!-- <module>omron-fins-grizzly-udp-master</module> -->
-		<!-- <module>omron-fins-grizzly-udp-slave</module> -->
+		<!-- <module>omron-fins-netty-tcp-master</module> -->
+		<!-- <module>omron-fins-netty-tcp-slave</module> -->
 	</modules>
 </project>
