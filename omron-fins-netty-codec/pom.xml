@@ -7,12 +7,11 @@
 	<parent>
 		<groupId>com.siyka</groupId>
 		<artifactId>omron-fins-parent</artifactId>
-		<version>0.0.1</version>
+		<version>0.0.2-SNAPSHOT</version>
 		<relativePath>../omron-fins-parent/pom.xml</relativePath>
 	</parent>
 
-	<name>Omron FINS Codec</name>
-	<description>Omron FINS Netty codecs</description>
+	<name>Omron FINS Netty Codec</name>
 	<artifactId>omron-fins-netty-codec</artifactId>
 
 	<dependencies>

@@ -22,15 +22,15 @@ public interface FinsMaster {
 	
 	public CompletableFuture<String> readString(final FinsNodeAddress destination, final FinsIoAddress address, final short wordLength);
 	public CompletableFuture<String> readString(final FinsNodeAddress destination, final FinsIoAddress address, final int wordLength);
-//	
+	
 //	public CompletableFuture<List<Bit>> readBits(final FinsNodeAddress destination, final FinsIoAddress address, final int itemCount);
 //	public CompletableFuture<Bit> readBit(final FinsNodeAddress destination, final FinsIoAddress address);
-//
+
 //	public CompletableFuture<List<Word>> readMultipleWords(final FinsNodeAddress destination, final List<FinsIoAddress> addresses);
-//
-//	public CompletableFuture<Void> writeWords(final FinsNodeAddress destination, final FinsIoAddress address, final List<Short> items);
-//	public CompletableFuture<Void> writeWord(final FinsNodeAddress destination, final FinsIoAddress address, final short item);
-//	
+
+	public CompletableFuture<Void> writeWords(final FinsNodeAddress destination, final FinsIoAddress address, final List<Word> items);
+	public CompletableFuture<Void> writeWord(final FinsNodeAddress destination, final FinsIoAddress address, final Word item);
+	
 //	public CompletableFuture<Void> writeMultipleWords(final FinsNodeAddress destination, final List<FinsIoAddress> addresses, final List<Short> items);
 
 

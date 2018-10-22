@@ -2,6 +2,7 @@ package com.siyka.omron.fins.master;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsIoMemoryArea;
 import com.siyka.omron.fins.FinsNodeAddress;
+import com.siyka.omron.fins.Word;
 
 public class Testing {
 
@@ -19,7 +21,7 @@ public class Testing {
 		final FinsMaster master = new FinsNettyUdpMaster(
 			new InetSocketAddress("192.168.250.10", 9600),
 			new InetSocketAddress("0.0.0.0", 9601),
-			new FinsNodeAddress(0,  2,  0)
+			new FinsNodeAddress(0,  20,  0)
 		);
 		
 		FinsNodeAddress destNode = new FinsNodeAddress(0,  10,  0);
@@ -31,12 +33,27 @@ public class Testing {
 //		String s = finsMaster.readString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 13000), 20);
 //		System.out.println(String.format("%s", s.trim()));
 		
-		logger.info("Sending read command");
-		master.readString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), 20)
-				.thenApply(String::trim)
-				.thenApply(s -> String.format("'%s' %d",  s, s.length()))
-				.thenAccept(System.out::println)
-				.get();
+		IntStream.range(1,  100)
+				.forEach(i -> {
+					
+					try {
+						logger.info("Sending write command");
+//						master.writeString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), String.format("Hello %d", i));
+						master.writeWord(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), new Word((short) 0x4242, false));
+						
+						logger.info("Sending read command");
+						master.readString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), 20)
+								.thenApply(String::trim)
+								.thenApply(s -> String.format("'%s' %d",  s, s.length()))
+								.thenAccept(System.out::println)
+								.get();
+						
+						Thread.sleep(1000);
+					} catch (final ExecutionException | InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				});
 //		List<Word> words = master.readWords(destNode, , 10).get();
 ////				.thenAccept(words -> {
 //					logger.info("Received words");

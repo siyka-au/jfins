@@ -16,6 +16,8 @@ import com.siyka.omron.fins.FinsFrame;
 import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.MemoryAreaReadCommand;
 import com.siyka.omron.fins.MemoryAreaReadWordsResponse;
+import com.siyka.omron.fins.MemoryAreaWriteWordsCommand;
+import com.siyka.omron.fins.codec.Codecs;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -53,6 +55,9 @@ public class FinsFrameUdpCodec extends MessageToMessageCodec<DatagramPacket, Fin
 				
 				if (command instanceof MemoryAreaReadCommand) {
 					Codecs.encodeMemoryAreaReadCommand(buffer, (MemoryAreaReadCommand) command);
+				} else if (command instanceof MemoryAreaWriteWordsCommand) {
+					Codecs.encodeMemoryAreaWriteWordsCommand(buffer, (MemoryAreaWriteWordsCommand) command);
+					
 				}
 				break;
 			}

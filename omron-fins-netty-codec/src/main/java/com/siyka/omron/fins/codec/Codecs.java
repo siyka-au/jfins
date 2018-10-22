@@ -1,4 +1,4 @@
-package com.siyka.omron.fins.master;
+package com.siyka.omron.fins.codec;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,13 +9,14 @@ import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsNodeAddress;
 import com.siyka.omron.fins.MemoryAreaReadCommand;
+import com.siyka.omron.fins.MemoryAreaWriteWordsCommand;
 import com.siyka.omron.fins.Word;
 
 import io.netty.buffer.ByteBuf;
 
-class Codecs {
+public class Codecs {
 
-	static void encodeHeader(final ByteBuf buffer, final FinsHeader header) {
+	public static void encodeHeader(final ByteBuf buffer, final FinsHeader header) {
 		byte icf = 0x00;
 		if (header.useGateway() == true) icf = (byte) (icf | 0x80);
 		if (header.getMessageType() == FinsHeader.MessageType.RESPONSE) icf = (byte) (icf | 0x40);
@@ -58,7 +59,7 @@ class Codecs {
 		buffer.writeShort(commandCode.getValue());
 	};
 	
-	static FinsCommandCode decodeCommandCode(final ByteBuf buffer)  {
+	public static FinsCommandCode decodeCommandCode(final ByteBuf buffer)  {
 		return FinsCommandCode.valueOf(buffer.readShort()).orElse(FinsCommandCode.UNKNOWN);
 	};
 	
@@ -68,16 +69,23 @@ class Codecs {
 		buffer.writeByte(address.getBitOffset());
 	};
 	
-	static void encodeMemoryAreaReadCommand(final ByteBuf buffer, final MemoryAreaReadCommand command)  {
+	public static void encodeMemoryAreaReadCommand(final ByteBuf buffer, final MemoryAreaReadCommand command)  {
 		encodeCommandCode(buffer, command.getCommandCode());
 		encodeIoAddress(buffer, command.getAddress());
 		buffer.writeShort(command.getItemCount());
 	}
 
-	static List<Word> decodeMemoryAreaReadWordsResponse(final ByteBuf buffer, final MemoryAreaReadCommand initiatingCommand) {
+	public static List<Word> decodeMemoryAreaReadWordsResponse(final ByteBuf buffer, final MemoryAreaReadCommand initiatingCommand) {
 		final List<Word> items = new ArrayList<>(initiatingCommand.getItemCount());
 		IntStream.range(0, initiatingCommand.getItemCount()).forEach(i -> items.add(new Word(buffer.readShort(), false)));
 		return items;
 	};
+	
+	public static void encodeMemoryAreaWriteWordsCommand(final ByteBuf buffer, final MemoryAreaWriteWordsCommand command) {
+		encodeCommandCode(buffer, command.getCommandCode());
+		encodeIoAddress(buffer, command.getAddress());
+		buffer.writeShort(command.getItems().size());
+		command.getItems().forEach(word -> buffer.writeShort(word.getValue()));
+	}
 	
 }

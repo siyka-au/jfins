@@ -7,7 +7,7 @@
 	<name>Omron FINS Parent POM</name>
 	<groupId>com.siyka</groupId>
 	<artifactId>omron-fins-parent</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<properties>

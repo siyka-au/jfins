@@ -1,15 +1,15 @@
 package com.siyka.omron.fins.slave;
 
+import com.siyka.omron.fins.FinsCommand;
 import com.siyka.omron.fins.FinsEndCode;
-import com.siyka.omron.fins.commands.FinsCommand;
-import com.siyka.omron.fins.commands.MemoryAreaWriteCommand;
-import com.siyka.omron.fins.responses.FinsResponse;
-import com.siyka.omron.fins.responses.FinsSimpleResponse;
+import com.siyka.omron.fins.FinsResponse;
+import com.siyka.omron.fins.MemoryAreaWriteCommand;
+import com.siyka.omron.fins.SimpleResponse;
 
 public interface ServiceCommandHandler {
 
-	public default void onMemoryAreaWrite(ServiceCommand<MemoryAreaWriteCommand<?>, FinsSimpleResponse> service) {
-        service.sendResponse(new FinsSimpleResponse(
+	public default void onMemoryAreaWrite(ServiceCommand<MemoryAreaWriteCommand<?>, SimpleResponse> service) {
+        service.sendResponse(new SimpleResponse(
         		service.getCommand().getCommandCode(),
         		FinsEndCode.NOT_SUPPORTED_BY_MODEL_VERSION));
     }

@@ -7,12 +7,11 @@
 	<parent>
 		<groupId>com.siyka</groupId>
 		<artifactId>omron-fins-parent</artifactId>
-		<version>0.0.1</version>
+		<version>0.0.2-SNAPSHOT</version>
 		<relativePath>../omron-fins-parent/pom.xml</relativePath>
 	</parent>
 
 	<name>Omron FINS Slave</name>
-	<description>Omron FINS slave</description>
 	<artifactId>omron-fins-slave</artifactId>
 
 	<dependencies>

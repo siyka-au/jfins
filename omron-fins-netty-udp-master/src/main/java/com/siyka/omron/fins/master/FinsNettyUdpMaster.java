@@ -2,6 +2,7 @@ package com.siyka.omron.fins.master;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,8 @@ import com.siyka.omron.fins.FinsNodeAddress;
 import com.siyka.omron.fins.FinsResponse;
 import com.siyka.omron.fins.MemoryAreaReadCommand;
 import com.siyka.omron.fins.MemoryAreaReadWordsResponse;
+import com.siyka.omron.fins.MemoryAreaWriteWordsCommand;
+import com.siyka.omron.fins.SimpleResponse;
 import com.siyka.omron.fins.Word;
 
 import io.netty.bootstrap.Bootstrap;
@@ -101,7 +104,6 @@ public class FinsNettyUdpMaster implements FinsMaster {
 	
 	@Override
 	public CompletableFuture<List<Word>> readWords(final FinsNodeAddress destination, final FinsIoAddress address, final short itemCount) {
-
 		final FinsHeader header = FinsHeader.Builder.defaultCommandBuilder()
 				.setDestinationAddress(destination)
 				.setSourceAddress(this.nodeAddress)
@@ -202,27 +204,26 @@ public class FinsNettyUdpMaster implements FinsMaster {
 //		throw new UnsupportedOperationException("Not implemented yet");
 //	}
 
-//	@Override
-//	public CompletableFuture<Void> writeWords(final FinsNodeAddress destination, final FinsIoAddress address, final List<Short> items) {
-//		MemoryAreaWriteWordCommand command = new MemoryAreaWriteWordCommand(address, items);
-//
-//		FinsFrame frame = new FinsFrameBuilder().setDestinationAddress(destination).setSourceAddress(this.nodeAddress)
-//				.setServiceAddress(this.getNextServiceAddress()).setData(command.getBytes()).build();
-//
-//		FinsFrame replyFrame = this.send(frame);
-//		MemoryAreaWriteResponse response = MemoryAreaWriteResponse.parseFrom(replyFrame.getData());
-//
-//		if (response.getEndCode() != FinsEndCode.NORMAL_COMPLETION) {
-//			throw new FinsMasterException(String.format("%s", response.getEndCode()));
-//		}
-//	}
+	@Override
+	public CompletableFuture<Void> writeWords(final FinsNodeAddress destination, final FinsIoAddress address, final List<Word> items) {	
+		final FinsHeader header = FinsHeader.Builder.defaultCommandBuilder()
+				.setDestinationAddress(destination)
+				.setSourceAddress(this.nodeAddress)
+				.setServiceAddress(this.getNextServiceAddress())
+				.build();
+		
+		// TODO Check to make sure the address space is for WORD data
 
-//	@Override
-//	public CompletableFuture<Void> writeWord(final FinsNodeAddress destination, final FinsIoAddress address, final short value) {
-//		List<Short> items = new ArrayList<Short>();
-//		items.add(value);
-//		writeWords(destination, address, items);
-//	}
+		return this.send(new FinsFrame<>(header, new MemoryAreaWriteWordsCommand(address, items)))
+				.thenApply(f -> f.getPdu())
+				.thenApply(SimpleResponse.class::cast)
+				.thenApply(r -> null);
+	}
+
+	@Override
+	public CompletableFuture<Void> writeWord(final FinsNodeAddress destination, final FinsIoAddress address, final Word value) {
+		return writeWords(destination, address, Collections.singletonList(value));
+	}
 
 //	public CompletableFuture<Void> writeBit(final FinsNodeAddress destination, final FinsIoAddress address, final Boolean value) {
 //		MemoryAreaWriteBitCommand command = new MemoryAreaWriteBitCommand(address, value);
@@ -239,14 +240,9 @@ public class FinsNettyUdpMaster implements FinsMaster {
 //
 //	}
 
-//	@Override
-//	public CompletableFuture<Void> writeMultipleWords(final FinsNodeAddress destination, final List<FinsIoAddress> addresses, final List<Short> values) {
-//		// TODO Auto-generated method stub
-//		throw new UnsupportedOperationException("Not implemented yet");
-//	}
 
 	// Internal methods
-	private <C extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<C> frame, final int attempt) {
+	private <Command extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<Command> frame, final int attempt) {
 		logger.debug("Sending FinsFrame");
 		final CompletableFuture<FinsFrame<FinsResponse>> future = new CompletableFuture<>();
 		logger.debug("Storing response future with service ID {}", frame.getHeader().getServiceAddress());
@@ -283,7 +279,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 //		}
 	}
 
-	private <C extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<C> frame) {
+	private <Command extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<Command> frame) {
 		return this.send(frame, 0);
 	}
 
