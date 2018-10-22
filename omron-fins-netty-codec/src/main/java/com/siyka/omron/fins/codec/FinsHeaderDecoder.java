@@ -1,7 +1,7 @@
 package com.siyka.omron.fins.codec;
 
 import com.siyka.omron.fins.FinsHeader;
-import com.siyka.omron.fins.NodeAddress;
+import com.siyka.omron.fins.FinsNodeAddress;
 
 import io.netty.buffer.ByteBuf;
 
@@ -24,8 +24,8 @@ public class FinsHeaderDecoder implements Decoder<FinsHeader> {
 				((icf & 0x40) != 0) ? FinsHeader.MessageType.RESPONSE : FinsHeader.MessageType.COMMAND,
 				((icf & 0x01) != 0) ? FinsHeader.ResponseAction.RESPONSE_NOT_REQUIRED : FinsHeader.ResponseAction.RESPONSE_REQUIRED,
 				gatewayCount,
-				new NodeAddress(destinationNetwork, destinationNode, destinationUnit),
-				new NodeAddress(sourceNetwork, sourceNode, sourceUnit),
+				new FinsNodeAddress(destinationNetwork, destinationNode, destinationUnit),
+				new FinsNodeAddress(sourceNetwork, sourceNode, sourceUnit),
 				serviceAddress);
 	}
 	

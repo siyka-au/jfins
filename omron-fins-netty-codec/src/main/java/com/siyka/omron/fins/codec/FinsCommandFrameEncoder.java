@@ -3,9 +3,9 @@ package com.siyka.omron.fins.codec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.siyka.omron.fins.FinsCommand;
 import com.siyka.omron.fins.FinsFrame;
-import com.siyka.omron.fins.commands.FinsCommand;
-import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
+import com.siyka.omron.fins.MemoryAreaReadCommand;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

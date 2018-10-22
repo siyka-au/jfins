@@ -1,9 +1,7 @@
 package com.siyka.omron.fins;
 
-public interface FinsPdu<T extends FinsPdu<T>> {
-
-	public FinsCommandCode getCommandCode();
+public interface FinsPdu {
 	
-//	public byte[] getPayload();
-		
+	public FinsCommandCode getCommandCode();
+
 }

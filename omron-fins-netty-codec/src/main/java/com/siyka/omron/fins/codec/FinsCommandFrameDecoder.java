@@ -10,9 +10,9 @@ import com.siyka.omron.fins.Bit;
 import com.siyka.omron.fins.FinsCommandCode;
 import com.siyka.omron.fins.FinsFrame;
 import com.siyka.omron.fins.FinsHeader;
-import com.siyka.omron.fins.IoAddress;
-import com.siyka.omron.fins.IoMemoryArea;
-import com.siyka.omron.fins.NodeAddress;
+import com.siyka.omron.fins.FinsIoAddress;
+import com.siyka.omron.fins.FinsIoMemoryArea;
+import com.siyka.omron.fins.FinsNodeAddress;
 import com.siyka.omron.fins.commands.FinsCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteBitCommand;
 import com.siyka.omron.fins.commands.MemoryAreaWriteCommand;
@@ -46,8 +46,8 @@ public class FinsCommandFrameDecoder implements FinsFrameDecoder<FinsCommand> {
 				((icf & 0x40) != 0) ? FinsHeader.MessageType.RESPONSE : FinsHeader.MessageType.COMMAND,
 				((icf & 0x01) != 0) ? FinsHeader.ResponseAction.RESPONSE_NOT_REQUIRED : FinsHeader.ResponseAction.RESPONSE_REQUIRED,
 				gatewayCount,
-				new NodeAddress(destinationNetwork, destinationNode, destinationUnit),
-				new NodeAddress(sourceNetwork, sourceNode, sourceUnit),
+				new FinsNodeAddress(destinationNetwork, destinationNode, destinationUnit),
+				new FinsNodeAddress(sourceNetwork, sourceNode, sourceUnit),
 				serviceAddress);
 		
 		final short commandCodeRaw = buffer.readShort();
@@ -65,12 +65,12 @@ public class FinsCommandFrameDecoder implements FinsFrameDecoder<FinsCommand> {
 	
 	private MemoryAreaWriteCommand<?> decodeMemoryAreaWrite(final FinsCommandCode commandCode, final ByteBuf buffer) throws DecoderException {
 		final byte ioMemoryAreaCode = buffer.readByte();
-		final IoMemoryArea memoryAreaCode = IoMemoryArea.valueOf(ioMemoryAreaCode)
+		final FinsIoMemoryArea memoryAreaCode = FinsIoMemoryArea.valueOf(ioMemoryAreaCode)
 				.orElseThrow(() -> new DecoderException(String.format("Unrecognised IO memory area code 0x%x", ioMemoryAreaCode)));
 		final short address = buffer.readShort();
 		final byte bitOffset = buffer.readByte();
 		final short dataItemCount = buffer.readShort();
-		final IoAddress ioAddress = new IoAddress(memoryAreaCode, address, bitOffset);
+		final FinsIoAddress ioAddress = new FinsIoAddress(memoryAreaCode, address, bitOffset);
 		switch (memoryAreaCode.getDataByteSize()) {
 			case 1: {
 				// Bit data

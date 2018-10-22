@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static org.joou.Unsigned.ushort;
+
 import com.siyka.omron.fins.Bit;
 import com.siyka.omron.fins.FinsCommandCode;
 import com.siyka.omron.fins.FinsEndCode;
@@ -36,7 +38,7 @@ public class MemoryAreaReadCommandCodec {
 			final List<Word> items = new ArrayList<>(itemCount);
 			
 			if (commandCode == FinsCommandCode.MEMORY_AREA_READ && endCode == FinsEndCode.NORMAL_COMPLETION) {
-				IntStream.of(itemCount).forEach(i -> items.add(new Word(buffer.readShort(), false)));
+				IntStream.of(itemCount).forEach(i -> items.add(new Word(ushort(buffer.readShort()), false)));
 			}
 			
 			return new MemoryAreaReadWordResponse(endCode, items);

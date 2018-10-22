@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.siyka.omron.fins.FinsFrame;
-import com.siyka.omron.fins.responses.FinsResponse;
+import com.siyka.omron.fins.FinsResponse;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -26,8 +26,7 @@ public class FinsMasterHandler extends SimpleChannelInboundHandler<FinsFrame<Fin
 
 	@Override
 	protected void channelRead0(final ChannelHandlerContext context, final FinsFrame<FinsResponse> frame) throws Exception {
-		Optional.ofNullable(this.futures.remove(frame.getHeader().getServiceAddress()))
-			.ifPresent(f -> f.complete(frame));
+		Optional.ofNullable(this.futures.get(frame.getHeader().getServiceAddress())).ifPresent(future -> future.complete(frame));
 		ReferenceCountUtil.release(frame);
 	}
 

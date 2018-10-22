@@ -1,7 +1,7 @@
 package com.siyka.omron.fins.master;
 
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,17 +11,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.siyka.omron.fins.FinsCommand;
 import com.siyka.omron.fins.FinsFrame;
-import com.siyka.omron.fins.FinsPdu;
 import com.siyka.omron.fins.FinsHeader;
-import com.siyka.omron.fins.IoAddress;
-import com.siyka.omron.fins.NodeAddress;
-import com.siyka.omron.fins.codec.MemoryAreaReadCommandCodec;
-import com.siyka.omron.fins.codec.PayloadDecoder;
-import com.siyka.omron.fins.commands.FinsCommand;
-import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
-import com.siyka.omron.fins.responses.FinsResponse;
-import com.siyka.omron.fins.responses.MemoryAreaReadWordResponse;
+import com.siyka.omron.fins.FinsIoAddress;
+import com.siyka.omron.fins.FinsNodeAddress;
+import com.siyka.omron.fins.FinsResponse;
+import com.siyka.omron.fins.MemoryAreaReadCommand;
+import com.siyka.omron.fins.MemoryAreaReadWordsResponse;
+import com.siyka.omron.fins.Word;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -39,7 +37,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	private final NodeAddress nodeAddress;
+	private final FinsNodeAddress nodeAddress;
 	private final InetSocketAddress destinationAddress;
 	private final InetSocketAddress sourceAddress;
 
@@ -54,7 +52,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 	// TODO make configurable
 //	private int retries = 3;
 
-	public FinsNettyUdpMaster(final InetSocketAddress destinationAddress, final InetSocketAddress sourceAddress, final NodeAddress nodeAddress) {
+	public FinsNettyUdpMaster(final InetSocketAddress destinationAddress, final InetSocketAddress sourceAddress, final FinsNodeAddress nodeAddress) {
 		this.nodeAddress = nodeAddress;
 		this.sourceAddress = sourceAddress;
 		this.destinationAddress = destinationAddress;
@@ -71,7 +69,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 					public void initChannel(DatagramChannel channel) throws Exception {
 						channel.pipeline()
 								.addLast(new LoggingHandler(LogLevel.DEBUG))
-								.addLast(new FinsFrameMasterUdpCodec())
+								.addLast(new FinsFrameUdpCodec(destinationAddress, sourceAddress))
 								.addLast(new FinsMasterHandler(FinsNettyUdpMaster.this.futures));
 					}
 				});
@@ -102,7 +100,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 	}
 	
 	@Override
-	public CompletableFuture<List<Short>> readWords(final NodeAddress destination, final IoAddress address, final short itemCount) {
+	public CompletableFuture<List<Word>> readWords(final FinsNodeAddress destination, final FinsIoAddress address, final short itemCount) {
 
 		final FinsHeader header = FinsHeader.Builder.defaultCommandBuilder()
 				.setDestinationAddress(destination)
@@ -111,59 +109,63 @@ public class FinsNettyUdpMaster implements FinsMaster {
 				.build();
 		
 		// TODO Check to make sure the address space is for WORD data
-		
-		final MemoryAreaReadCommand command = new MemoryAreaReadCommand(address, itemCount);
-		final FinsFrame<MemoryAreaReadCommand> frame = new FinsFrame<>(header, command);
 
-		return this.send(frame, MemoryAreaReadCommandCodec.memoryAreaReadCommandDecoder)
-				.thenApply(responseFrame -> {
-					final FinsPdu response = responseFrame.getPdu();
-					
-					if (response instanceof MemoryAreaReadWordResponse) {
-						return ((MemoryAreaReadWordResponse) response).getItems();
-					}
-					
-					return Collections.emptyList();
-//					if (response.getEndCode() != FinsEndCode.NORMAL_COMPLETION) {
-//						throw new FinsMasterException(String.format("%s", response.getEndCode()));
-//					}
-				});
+		return this.send(new FinsFrame<>(header, new MemoryAreaReadCommand(address, itemCount)))
+				.thenApply(f -> f.getPdu())
+				.thenApply(MemoryAreaReadWordsResponse.class::cast)
+				.thenApply(p -> p.getItems());
 	}
-
+	
 	@Override
-	public CompletableFuture<List<Short>> readWords(final NodeAddress destination, final IoAddress address, final int itemCount) {
+	public CompletableFuture<List<Word>> readWords(final FinsNodeAddress destination, final FinsIoAddress address, final int itemCount) {
 		return readWords(destination, address, (short) itemCount);
 	}
 
-//	@Override
-//	public CompletableFuture<Short> readWord(final FinsNodeAddress destination, final FinsIoAddress address) {
-//		return readWords(destination, address, 1).handleAsync((words, throwable) -> words.get(0));
-//	}
+	@Override
+	public CompletableFuture<Word> readWord(final FinsNodeAddress destination, final FinsIoAddress address) {
+		return readWords(destination, address, 1).thenApply(words -> words.get(0));
+	}
 
-//	@Override
-//	public CompletableFuture<String> readString(final FinsNodeAddress destination, final FinsIoAddress address, final short wordLength) {
-//		return this.readWords(destination, address, wordLength).handleAsync((words, throwable) -> {
-//			StringBuffer stringBuffer = new StringBuffer(wordLength * 2);
-//			byte[] bytes = new byte[2];
-//			for (Short s : words) {
-//				bytes[1] = (byte) (s & 0xff);
-//				bytes[0] = (byte) ((s >> 8) & 0xff);
-//				try {
-//					stringBuffer.append(new String(bytes, "US-ASCII"));
-//				} catch (UnsupportedEncodingException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-//
-//			return stringBuffer.toString();
-//		});
-//	}
+	@Override
+	public CompletableFuture<byte[]> readBytes(final FinsNodeAddress destination, final FinsIoAddress address, final short itemCount) {
+		return this.readWords(destination, address, (int) Math.ceil(itemCount / 2.0f)).thenApply(words -> {
+			final byte[] bytes = new byte[itemCount];
+			int i = 0;
+			for (Word word : words) {
+				final short s = word.getValue();
+				bytes[i++] = (byte) ((s >> 8) & 0xff);
+				bytes[i++] = (byte) (s & 0xff);
+			}
 
-//	@Override
-//	public CompletableFuture<String> readString(final FinsNodeAddress destination, final FinsIoAddress address, final int wordLength) {
-//		return readString(destination, address, (short) wordLength);
-//	}
+			return bytes;
+		});
+	}
+	
+	@Override
+	public CompletableFuture<byte[]> readBytes(FinsNodeAddress destination, FinsIoAddress address, int itemCount) {
+		return readBytes(destination, address, (short) itemCount);
+	}
+	
+	@Override
+	public CompletableFuture<String> readString(final FinsNodeAddress destination, final FinsIoAddress address, final short length) {
+		return this.readBytes(destination, address, length).thenApply(bytes -> {
+			StringBuffer stringBuffer = new StringBuffer();
+			try {
+				stringBuffer.append(new String(bytes, "US-ASCII"));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return stringBuffer.toString();
+		});
+	}
+	
+	
+
+	@Override
+	public CompletableFuture<String> readString(final FinsNodeAddress destination, final FinsIoAddress address, final int length) {
+		return readString(destination, address, (short) length);
+	}
 	
 //	@Override
 //	public CompletableFuture<List<Bit>> readBits(final FinsNodeAddress destination, final FinsIoAddress address, final short itemCount) {
@@ -244,11 +246,11 @@ public class FinsNettyUdpMaster implements FinsMaster {
 //	}
 
 	// Internal methods
-	private <T extends FinsResponse<T>> CompletableFuture<FinsFrame<T>> send(final FinsFrame<T> frame, final PayloadDecoder<T> payloadDecoder, final int attempt) {
+	private <C extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<C> frame, final int attempt) {
 		logger.debug("Sending FinsFrame");
-		final CompletableFuture<FinsFrame<T>> future = new CompletableFuture<>();
+		final CompletableFuture<FinsFrame<FinsResponse>> future = new CompletableFuture<>();
 		logger.debug("Storing response future with service ID {}", frame.getHeader().getServiceAddress());
-//		this.futures.put(frame.getHeader().getServiceAddress(), future);
+		this.futures.put(frame.getHeader().getServiceAddress(), future);
 		
 		logger.debug("Writing and flushing FinsFrame");
 		logger.debug("Channel {} Active:{} Writable:{} Open:{} Registered:{}", this.channel, this.channel.isActive(), this.channel.isWritable(), this.channel.isOpen(), this.channel.isRegistered());
@@ -281,8 +283,8 @@ public class FinsNettyUdpMaster implements FinsMaster {
 //		}
 	}
 
-	private <T extends FinsResponse<T>> CompletableFuture<FinsFrame<T>> send(final FinsFrame<T> frame, final PayloadDecoder<T> payloadDecoder) {
-		return this.send(frame, payloadDecoder, 0);
+	private <C extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<C> frame) {
+		return this.send(frame, 0);
 	}
 
 	private synchronized byte getNextServiceAddress() {

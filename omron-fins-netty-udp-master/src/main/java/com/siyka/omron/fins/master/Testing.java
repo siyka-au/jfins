@@ -1,15 +1,14 @@
 package com.siyka.omron.fins.master;
 
 import java.net.InetSocketAddress;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.siyka.omron.fins.IoAddress;
-import com.siyka.omron.fins.IoMemoryArea;
-import com.siyka.omron.fins.NodeAddress;
+import com.siyka.omron.fins.FinsIoAddress;
+import com.siyka.omron.fins.FinsIoMemoryArea;
+import com.siyka.omron.fins.FinsNodeAddress;
 
 public class Testing {
 
@@ -20,10 +19,10 @@ public class Testing {
 		final FinsMaster master = new FinsNettyUdpMaster(
 			new InetSocketAddress("192.168.250.10", 9600),
 			new InetSocketAddress("0.0.0.0", 9601),
-			new NodeAddress(0,  2,  0)
+			new FinsNodeAddress(0,  2,  0)
 		);
 		
-		NodeAddress destNode = new NodeAddress(0,  10,  0);
+		FinsNodeAddress destNode = new FinsNodeAddress(0,  10,  0);
 		
 		logger.info("Connecting...");
 		master.connect().get();
@@ -33,17 +32,22 @@ public class Testing {
 //		System.out.println(String.format("%s", s.trim()));
 		
 		logger.info("Sending read command");
-		List<Short> words = master.readWords(destNode, new IoAddress(IoMemoryArea.DM_WORD, 10000), 10).get();
-//				.thenAccept(words -> {
-					logger.info("Received words");
-					int i = 0;
-					for (Short word : words) {
-						System.out.println(String.format("Word %d = %d", i, word));
-						i++;
-					}
-//				})
-//				.thenRun(master::disconnect)
-//				.get();
+		master.readString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), 20)
+				.thenApply(String::trim)
+				.thenApply(s -> String.format("'%s' %d",  s, s.length()))
+				.thenAccept(System.out::println)
+				.get();
+//		List<Word> words = master.readWords(destNode, , 10).get();
+////				.thenAccept(words -> {
+//					logger.info("Received words");
+//					int i = 0;
+//					for (Word word : words) {
+//						System.out.println(String.format("Word %d = %d", i, word.getValue()));
+//						i++;
+//					}
+////				})
+////				.thenRun(master::disconnect)
+////				.get();
 		master.disconnect().get();
 		
 	}

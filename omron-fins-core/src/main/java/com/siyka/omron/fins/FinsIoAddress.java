@@ -2,38 +2,38 @@ package com.siyka.omron.fins;
 
 import java.io.Serializable;
 
-public final class IoAddress implements Serializable {
+public final class FinsIoAddress implements Serializable {
 
 	private static final long serialVersionUID = 256655711718324689L;
 	
-	private final IoMemoryArea memoryArea;
+	private final FinsIoMemoryArea memoryArea;
 	private final short address;
 	private final byte bitOffset;
 
-	public IoAddress(final IoMemoryArea memoryArea, final short address) {
+	public FinsIoAddress(final FinsIoMemoryArea memoryArea, final short address) {
 		this(memoryArea, address, (byte) 0);
 	}
 	
-	public IoAddress(final IoMemoryArea memoryArea, final int address) {
+	public FinsIoAddress(final FinsIoMemoryArea memoryArea, final int address) {
 		this(memoryArea, (short) address);
 	}
 	
-	public IoAddress(final IoMemoryArea memoryArea, final int address, final int bitOffset) {
+	public FinsIoAddress(final FinsIoMemoryArea memoryArea, final int address, final int bitOffset) {
 		this(memoryArea, (short) address, (byte) bitOffset);
 	}
 	
-	public IoAddress(final IoMemoryArea memoryArea, final short address, final int bitOffset) {
+	public FinsIoAddress(final FinsIoMemoryArea memoryArea, final short address, final int bitOffset) {
 		this(memoryArea, address, (byte) bitOffset);
 	}
 	
-	public IoAddress(final IoMemoryArea memoryArea, final short address, final byte bitOffset) {
+	public FinsIoAddress(final FinsIoMemoryArea memoryArea, final short address, final byte bitOffset) {
 		super();
 		this.memoryArea = memoryArea;
 		this.address = address;
 		this.bitOffset = bitOffset;
 	}
 
-	public IoMemoryArea getMemoryArea() {
+	public FinsIoMemoryArea getMemoryArea() {
 		return this.memoryArea;
 	}
 
@@ -69,7 +69,7 @@ public final class IoAddress implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		IoAddress other = (IoAddress) obj;
+		FinsIoAddress other = (FinsIoAddress) obj;
 		if (address != other.address)
 			return false;
 		if (bitOffset != other.bitOffset)

@@ -6,7 +6,7 @@ import static java.util.stream.Collectors.toMap;
 import java.util.Map;
 import java.util.Optional;
 
-public enum IoMemoryArea {
+public enum FinsIoMemoryArea {
 	
 	CIO_BIT(0x30, 1),
 	WR_BIT(0x31, 1),
@@ -29,15 +29,15 @@ public enum IoMemoryArea {
 	private final byte memoryAreaValue;
 	private final int dataByteSize;
 
-	private final static Map<Byte, IoMemoryArea> map = stream(IoMemoryArea.values()).collect(
+	private final static Map<Byte, FinsIoMemoryArea> map = stream(FinsIoMemoryArea.values()).collect(
 			toMap(memoryAreaValue -> memoryAreaValue.memoryAreaValue, memoryAreaValue -> memoryAreaValue));
 
-	private IoMemoryArea(final int memoryAreaValue, final int dataByteSize) {
+	private FinsIoMemoryArea(final int memoryAreaValue, final int dataByteSize) {
 		this.memoryAreaValue = (byte) memoryAreaValue;
 		this.dataByteSize = dataByteSize;
 	}
 
-	public static Optional<IoMemoryArea> valueOf(byte memoryAreaValue) {
+	public static Optional<FinsIoMemoryArea> valueOf(byte memoryAreaValue) {
 		return Optional.ofNullable(map.get(memoryAreaValue));
 	}
 

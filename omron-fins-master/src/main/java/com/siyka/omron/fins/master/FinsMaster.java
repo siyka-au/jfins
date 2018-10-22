@@ -3,8 +3,9 @@ package com.siyka.omron.fins.master;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.siyka.omron.fins.IoAddress;
-import com.siyka.omron.fins.NodeAddress;
+import com.siyka.omron.fins.FinsIoAddress;
+import com.siyka.omron.fins.FinsNodeAddress;
+import com.siyka.omron.fins.Word;
 
 public interface FinsMaster {
 
@@ -12,25 +13,26 @@ public interface FinsMaster {
 
 	public CompletableFuture<Void> disconnect();
 
+	public CompletableFuture<List<Word>> readWords(final FinsNodeAddress destination, final FinsIoAddress address, final short itemCount);
+	public CompletableFuture<List<Word>> readWords(final FinsNodeAddress destination, final FinsIoAddress address, final int itemCount);
+	public CompletableFuture<Word> readWord(final FinsNodeAddress destination, final FinsIoAddress address);
 
+	public CompletableFuture<byte[]> readBytes(final FinsNodeAddress destination, final FinsIoAddress address, final short itemCount);
+	public CompletableFuture<byte[]> readBytes(final FinsNodeAddress destination, final FinsIoAddress address, final int itemCount);
+	
+	public CompletableFuture<String> readString(final FinsNodeAddress destination, final FinsIoAddress address, final short wordLength);
+	public CompletableFuture<String> readString(final FinsNodeAddress destination, final FinsIoAddress address, final int wordLength);
+//	
+//	public CompletableFuture<List<Bit>> readBits(final FinsNodeAddress destination, final FinsIoAddress address, final int itemCount);
+//	public CompletableFuture<Bit> readBit(final FinsNodeAddress destination, final FinsIoAddress address);
+//
+//	public CompletableFuture<List<Word>> readMultipleWords(final FinsNodeAddress destination, final List<FinsIoAddress> addresses);
+//
+//	public CompletableFuture<Void> writeWords(final FinsNodeAddress destination, final FinsIoAddress address, final List<Short> items);
+//	public CompletableFuture<Void> writeWord(final FinsNodeAddress destination, final FinsIoAddress address, final short item);
+//	
+//	public CompletableFuture<Void> writeMultipleWords(final FinsNodeAddress destination, final List<FinsIoAddress> addresses, final List<Short> items);
 
-	public CompletableFuture<List<Short>> readWords(NodeAddress destination, IoAddress address, short itemCount);
-	public CompletableFuture<List<Short>> readWords(NodeAddress destination, IoAddress address, int itemCount);
-//	public CompletableFuture<Short> readWord(FinsNodeAddress destination, FinsIoAddress address);
-//
-//	public CompletableFuture<String> readString(FinsNodeAddress destination, FinsIoAddress address, short wordLength);
-//	public CompletableFuture<String> readString(FinsNodeAddress destination, FinsIoAddress address, int wordLength);
-//	
-//	public CompletableFuture<List<Bit>> readBits(FinsNodeAddress destination, FinsIoAddress address, short itemCount);
-//	public CompletableFuture<List<Bit>> readBits(FinsNodeAddress destination, FinsIoAddress address, int itemCount);
-//	public CompletableFuture<Bit> readBit(FinsNodeAddress destination, FinsIoAddress address);
-//
-//	public CompletableFuture<List<Short>> readMultipleWords(FinsNodeAddress destination, List<FinsIoAddress> addresses);
-//
-//	public CompletableFuture<Void> writeWords(FinsNodeAddress destination, FinsIoAddress address, List<Short> items);
-//	public CompletableFuture<Void> writeWord(FinsNodeAddress destination, FinsIoAddress address, short item);
-//	
-//	public CompletableFuture<Void> writeMultipleWords(FinsNodeAddress destination, List<FinsIoAddress> addresses, List<Short> items);
 
 
 
