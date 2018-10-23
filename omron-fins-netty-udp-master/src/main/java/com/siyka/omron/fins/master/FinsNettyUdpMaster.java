@@ -2,6 +2,7 @@ package com.siyka.omron.fins.master;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.siyka.omron.fins.Bit;
 import com.siyka.omron.fins.FinsCommand;
 import com.siyka.omron.fins.FinsFrame;
 import com.siyka.omron.fins.FinsHeader;
@@ -20,6 +22,7 @@ import com.siyka.omron.fins.FinsNodeAddress;
 import com.siyka.omron.fins.FinsResponse;
 import com.siyka.omron.fins.MemoryAreaReadCommand;
 import com.siyka.omron.fins.MemoryAreaReadWordsResponse;
+import com.siyka.omron.fins.MemoryAreaWriteBitsCommand;
 import com.siyka.omron.fins.MemoryAreaWriteWordsCommand;
 import com.siyka.omron.fins.SimpleResponse;
 import com.siyka.omron.fins.Word;
@@ -81,38 +84,30 @@ public class FinsNettyUdpMaster implements FinsMaster {
 	// FINS Master API
 	@Override
 	public CompletableFuture<Void> connect() {
-		final CompletableFuture<Void> connectFuture = new CompletableFuture<>();
-		this.bootstrap.connect(this.destinationAddress, this.sourceAddress).addListener(new ChannelFutureListener() {
-			@Override
-			public void operationComplete(ChannelFuture future) throws Exception {
-				FinsNettyUdpMaster.this.channel = future.sync().channel();
-				connectFuture.complete(null);
-			}
+		return CompletableFuture.runAsync(() -> {
+			this.bootstrap.connect(this.destinationAddress, this.sourceAddress).addListener(new ChannelFutureListener() {
+				@Override
+				public void operationComplete(ChannelFuture future) {
+					FinsNettyUdpMaster.this.channel = future.syncUninterruptibly().channel();
+				}
+			})
+			.syncUninterruptibly();
 		});
-		return connectFuture;
 	}
 
 	@Override
 	public CompletableFuture<Void> disconnect() {
-		final CompletableFuture<Void> disconnectFuture = new CompletableFuture<>();
-		this.workerGroup.shutdownGracefully().addListener(f -> {
-			f.sync();
-			disconnectFuture.complete(null);
+		return CompletableFuture.runAsync(() -> {
+				this.workerGroup.shutdownGracefully().syncUninterruptibly();
 		});
-		return disconnectFuture;
 	}
 	
 	@Override
 	public CompletableFuture<List<Word>> readWords(final FinsNodeAddress destination, final FinsIoAddress address, final short itemCount) {
-		final FinsHeader header = FinsHeader.Builder.defaultCommandBuilder()
-				.setDestinationAddress(destination)
-				.setSourceAddress(this.nodeAddress)
-				.setServiceAddress(this.getNextServiceAddress())
-				.build();
-		
+	
 		// TODO Check to make sure the address space is for WORD data
 
-		return this.send(new FinsFrame<>(header, new MemoryAreaReadCommand(address, itemCount)))
+		return this.send(new FinsFrame<>(defaultCommandHeader(destination), new MemoryAreaReadCommand(address, itemCount)))
 				.thenApply(f -> f.getPdu())
 				.thenApply(MemoryAreaReadWordsResponse.class::cast)
 				.thenApply(p -> p.getItems());
@@ -203,43 +198,48 @@ public class FinsNettyUdpMaster implements FinsMaster {
 //		// TODO Auto-generated method stub
 //		throw new UnsupportedOperationException("Not implemented yet");
 //	}
-
+	
 	@Override
 	public CompletableFuture<Void> writeWords(final FinsNodeAddress destination, final FinsIoAddress address, final List<Word> items) {	
-		final FinsHeader header = FinsHeader.Builder.defaultCommandBuilder()
-				.setDestinationAddress(destination)
-				.setSourceAddress(this.nodeAddress)
-				.setServiceAddress(this.getNextServiceAddress())
-				.build();
-		
+
 		// TODO Check to make sure the address space is for WORD data
 
-		return this.send(new FinsFrame<>(header, new MemoryAreaWriteWordsCommand(address, items)))
+		return this.send(new FinsFrame<>(defaultCommandHeader(destination), new MemoryAreaWriteWordsCommand(address, items)))
 				.thenApply(f -> f.getPdu())
 				.thenApply(SimpleResponse.class::cast)
 				.thenApply(r -> null);
 	}
 
 	@Override
+	public CompletableFuture<Void> writeWords(final FinsNodeAddress destination, final FinsIoAddress address, final Word... items) {	
+		return this.writeWords(destination, address, Arrays.asList(items)); 
+	}
+	
+	@Override
 	public CompletableFuture<Void> writeWord(final FinsNodeAddress destination, final FinsIoAddress address, final Word value) {
 		return writeWords(destination, address, Collections.singletonList(value));
 	}
 
-//	public CompletableFuture<Void> writeBit(final FinsNodeAddress destination, final FinsIoAddress address, final Boolean value) {
-//		MemoryAreaWriteBitCommand command = new MemoryAreaWriteBitCommand(address, value);
-//
-//		FinsFrame frame = new FinsFrameBuilder().setDestinationAddress(destination).setSourceAddress(this.nodeAddress)
-//				.setServiceAddress(this.getNextServiceAddress()).setData(command.getBytes()).build();
-//
-//		FinsFrame replyFrame = this.send(frame);
-//		MemoryAreaWriteResponse response = MemoryAreaWriteResponse.parseFrom(replyFrame.getData());
-//
-//		if (response.getEndCode() != FinsEndCode.NORMAL_COMPLETION) {
-//			throw new FinsMasterException(String.format("%s", response.getEndCode()));
-//		}
-//
-//	}
+	@Override
+	public CompletableFuture<Void> writeBits(final FinsNodeAddress destination, final FinsIoAddress address, final List<Bit> items) {
 
+		// TODO Check to make sure the address space is for WORD data
+
+		return this.send(new FinsFrame<>(defaultCommandHeader(destination), new MemoryAreaWriteBitsCommand(address, items)))
+				.thenApply(f -> f.getPdu())
+				.thenApply(SimpleResponse.class::cast)
+				.thenApply(r -> null);
+	}
+	
+	@Override
+	public CompletableFuture<Void> writeBits(final FinsNodeAddress destination, final FinsIoAddress address, final Bit... items) {
+		return this.writeBits(destination, address, Arrays.asList(items));
+	}
+	
+	@Override
+	public CompletableFuture<Void> writeBit(final FinsNodeAddress destination, final FinsIoAddress address, final Bit value) {
+		return writeBits(destination, address, Collections.singletonList(value));
+	}
 
 	// Internal methods
 	private <Command extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<Command> frame, final int attempt) {
@@ -283,6 +283,14 @@ public class FinsNettyUdpMaster implements FinsMaster {
 		return this.send(frame, 0);
 	}
 
+	private FinsHeader defaultCommandHeader(final FinsNodeAddress destination) {
+		return FinsHeader.Builder.defaultCommandBuilder()
+				.setDestinationAddress(destination)
+				.setSourceAddress(this.nodeAddress)
+				.setServiceAddress(this.getNextServiceAddress())
+				.build();
+	}
+	
 	private synchronized byte getNextServiceAddress() {
 		return (byte) this.serviceAddress.incrementAndGet();
 	}

@@ -1,12 +1,15 @@
 package com.siyka.omron.fins.master;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.siyka.omron.fins.Bit;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsIoMemoryArea;
 import com.siyka.omron.fins.FinsNodeAddress;
@@ -38,18 +41,19 @@ public class Testing {
 					
 					try {
 						logger.info("Sending write command");
-//						master.writeString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), String.format("Hello %d", i));
-						master.writeWord(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), new Word((short) 0x4242, false));
+						master.writeString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), String.format("Hello %d", i));
+//						master.writeWord(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 600, 0), new Bit(true));
+//						master.writeBits(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_BIT, 600, 4), new Bit(true), new Bit(true), new Bit(true));
 						
-						logger.info("Sending read command");
-						master.readString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), 20)
-								.thenApply(String::trim)
-								.thenApply(s -> String.format("'%s' %d",  s, s.length()))
-								.thenAccept(System.out::println)
-								.get();
+//						logger.info("Sending read command");
+//						master.readString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), 20)
+//								.thenApply(String::trim)
+//								.thenApply(s -> String.format("'%s' %d",  s, s.length()))
+//								.thenAccept(System.out::println)
+//								.get();
 						
 						Thread.sleep(1000);
-					} catch (final ExecutionException | InterruptedException e) {
+					} catch (final InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}

@@ -77,11 +77,16 @@
 			</dependency>
 
 			<dependency>
+				<groupId>net.jodah</groupId>
+				<artifactId>failsafe</artifactId>
+				<version>1.1.0</version>
+			</dependency>
+
+			<dependency>
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
 				<version>${com.google.guava.version}</version>
 			</dependency>
-
 
 			<dependency>
 				<groupId>org.slf4j</groupId>

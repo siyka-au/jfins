@@ -3,6 +3,7 @@ package com.siyka.omron.fins.master;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import com.siyka.omron.fins.Bit;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsNodeAddress;
 import com.siyka.omron.fins.Word;
@@ -29,7 +30,14 @@ public interface FinsMaster {
 //	public CompletableFuture<List<Word>> readMultipleWords(final FinsNodeAddress destination, final List<FinsIoAddress> addresses);
 
 	public CompletableFuture<Void> writeWords(final FinsNodeAddress destination, final FinsIoAddress address, final List<Word> items);
+	public CompletableFuture<Void> writeWords(final FinsNodeAddress destination, final FinsIoAddress address, final Word... items);
 	public CompletableFuture<Void> writeWord(final FinsNodeAddress destination, final FinsIoAddress address, final Word item);
+
+	public CompletableFuture<Void> writeBits(final FinsNodeAddress destination, final FinsIoAddress address, final List<Bit> items);
+	public CompletableFuture<Void> writeBits(final FinsNodeAddress destination, final FinsIoAddress address, final Bit... items);
+	public CompletableFuture<Void> writeBit(final FinsNodeAddress destination, final FinsIoAddress address, final Bit value);
+
+	
 	
 //	public CompletableFuture<Void> writeMultipleWords(final FinsNodeAddress destination, final List<FinsIoAddress> addresses, final List<Short> items);
 

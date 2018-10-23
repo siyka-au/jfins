@@ -9,6 +9,7 @@ import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsNodeAddress;
 import com.siyka.omron.fins.MemoryAreaReadCommand;
+import com.siyka.omron.fins.MemoryAreaWriteBitsCommand;
 import com.siyka.omron.fins.MemoryAreaWriteWordsCommand;
 import com.siyka.omron.fins.Word;
 
@@ -86,6 +87,13 @@ public class Codecs {
 		encodeIoAddress(buffer, command.getAddress());
 		buffer.writeShort(command.getItems().size());
 		command.getItems().forEach(word -> buffer.writeShort(word.getValue()));
+	}
+	
+	public static void encodeMemoryAreaWriteBitsCommand(final ByteBuf buffer, final MemoryAreaWriteBitsCommand command) {
+		encodeCommandCode(buffer, command.getCommandCode());
+		encodeIoAddress(buffer, command.getAddress());
+		buffer.writeShort(command.getItems().size());
+		command.getItems().forEach(bit -> buffer.writeByte(bit.getValue() ? 0x01 : 0x00));
 	}
 	
 }
