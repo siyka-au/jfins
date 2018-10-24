@@ -2,6 +2,8 @@ package com.siyka.omron.fins.master;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -240,7 +243,66 @@ public class FinsNettyUdpMaster implements FinsMaster {
 	public CompletableFuture<Void> writeBit(final FinsNodeAddress destination, final FinsIoAddress address, final Bit value) {
 		return writeBits(destination, address, Collections.singletonList(value));
 	}
+	
 
+	@Override
+	public CompletableFuture<Void> writeBytes(final FinsNodeAddress destination, final FinsIoAddress address, final byte... bytes) {
+		final int wordLength = (int) Math.ceil(bytes.length / 2.0f);
+		final List<Word> words = new ArrayList<>(wordLength);
+		for (int i = 0; i < bytes.length; i += 2) {
+			short value = (short) (bytes[i] << 8);
+			if (i + 1 < bytes.length) {
+				value |= (short) bytes[i + 1];
+			}
+			words.add(new Word(value));
+		}
+
+		return this.writeWords(destination, address, words);
+	}
+	
+	@Override
+	public CompletableFuture<Void> writeBytes(final FinsNodeAddress destination, final FinsIoAddress address, final Byte... byteObjects) {
+		return this.writeBytes(destination, address, Arrays.asList(byteObjects));
+	}
+	
+	@Override
+	public CompletableFuture<Void> writeBytes(final FinsNodeAddress destination, final FinsIoAddress address, final List<Byte> byteObjects) {
+		byte[] bytes = new byte[byteObjects.size()];
+
+		int i = 0;
+		for(Byte b: byteObjects)
+		    bytes[i++] = b.byteValue();
+		
+		return this.writeBytes(destination, address, bytes);
+	}
+
+	@Override
+	public CompletableFuture<Void> writeString(final FinsNodeAddress destination, final FinsIoAddress address, final String text, final short length) {
+		byte[] bytes = text.getBytes(StandardCharsets.US_ASCII);
+		if (bytes[bytes.length - 1] != 0) {
+			byte[] nullTerminatedBytes = new byte[bytes.length + 1];
+			System.arraycopy(bytes, 0, nullTerminatedBytes, 0, bytes.length);
+			bytes = nullTerminatedBytes;
+		}
+		return this.writeBytes(destination, address, bytes);
+	}
+	
+	@Override
+	public CompletableFuture<Void> writeString(final FinsNodeAddress destination, final FinsIoAddress address, final String text, final int length) {
+		return this.writeString(destination, address, text, length);
+	}
+	
+	@Override
+	public CompletableFuture<Void> writeString(final FinsNodeAddress destination, final FinsIoAddress address, final String text) {
+		byte[] bytes = text.getBytes(StandardCharsets.US_ASCII);
+		if (bytes[bytes.length - 1] != 0) {
+			byte[] nullTerminatedBytes = new byte[bytes.length + 1];
+			System.arraycopy(bytes, 0, nullTerminatedBytes, 0, bytes.length);
+			bytes = nullTerminatedBytes;
+		}
+		return this.writeBytes(destination, address, bytes);
+	}
+	
 	// Internal methods
 	private <Command extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<Command> frame, final int attempt) {
 		logger.debug("Sending FinsFrame");

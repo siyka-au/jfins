@@ -37,7 +37,13 @@ public interface FinsMaster {
 	public CompletableFuture<Void> writeBits(final FinsNodeAddress destination, final FinsIoAddress address, final Bit... items);
 	public CompletableFuture<Void> writeBit(final FinsNodeAddress destination, final FinsIoAddress address, final Bit value);
 
+	public CompletableFuture<Void> writeBytes(final FinsNodeAddress destination, final FinsIoAddress address, final List<Byte> bytes);
+	public CompletableFuture<Void> writeBytes(final FinsNodeAddress destination, final FinsIoAddress address, final byte... bytes);
+	public CompletableFuture<Void> writeBytes(final FinsNodeAddress destination, final FinsIoAddress address, final Byte... bytes);
 	
+	public CompletableFuture<Void> writeString(final FinsNodeAddress destination, final FinsIoAddress address, final String text, final short maxLength);
+	public CompletableFuture<Void> writeString(final FinsNodeAddress destination, final FinsIoAddress address, final String text, final int maxLength);
+	public CompletableFuture<Void> writeString(final FinsNodeAddress destination, final FinsIoAddress address, final String text);
 	
 //	public CompletableFuture<Void> writeMultipleWords(final FinsNodeAddress destination, final List<FinsIoAddress> addresses, final List<Short> items);
 

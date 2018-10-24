@@ -36,12 +36,12 @@ public class Testing {
 //		String s = finsMaster.readString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 13000), 20);
 //		System.out.println(String.format("%s", s.trim()));
 		
-		IntStream.range(1,  100)
+		IntStream.range(1,  999)
 				.forEach(i -> {
 					
 					try {
 						logger.info("Sending write command");
-						master.writeString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), String.format("Hello %d", i));
+						master.writeString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), String.format("Hi %d", i));
 //						master.writeWord(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 600, 0), new Bit(true));
 //						master.writeBits(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_BIT, 600, 4), new Bit(true), new Bit(true), new Bit(true));
 						
