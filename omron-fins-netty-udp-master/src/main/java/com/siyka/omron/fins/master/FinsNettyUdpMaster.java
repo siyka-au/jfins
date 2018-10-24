@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,6 +81,14 @@ public class FinsNettyUdpMaster implements FinsMaster {
 								.addLast(new FinsMasterHandler(FinsNettyUdpMaster.this.futures));
 					}
 				});
+	}
+	
+	public FinsNettyUdpMaster(final InetSocketAddress destinationAddress, final FinsNodeAddress nodeAddress) {
+		this(destinationAddress, new InetSocketAddress("0.0.0.0", 9600), nodeAddress);
+	}
+	
+	public FinsNettyUdpMaster(final InetSocketAddress destinationAddress, final int sourcePort, final FinsNodeAddress nodeAddress) {
+		this(destinationAddress, new InetSocketAddress("0.0.0.0", sourcePort), nodeAddress);
 	}
 
 	// FINS Master API

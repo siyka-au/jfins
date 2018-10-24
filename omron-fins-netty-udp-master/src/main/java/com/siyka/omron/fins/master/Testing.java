@@ -1,19 +1,15 @@
 package com.siyka.omron.fins.master;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.siyka.omron.fins.Bit;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsIoMemoryArea;
 import com.siyka.omron.fins.FinsNodeAddress;
-import com.siyka.omron.fins.Word;
 
 public class Testing {
 
@@ -23,8 +19,8 @@ public class Testing {
 	public static void main(String[] args) throws InterruptedException, ExecutionException  {
 		final FinsMaster master = new FinsNettyUdpMaster(
 			new InetSocketAddress("192.168.250.10", 9600),
-			new InetSocketAddress("0.0.0.0", 9601),
-			new FinsNodeAddress(0,  20,  0)
+			9601,
+			new FinsNodeAddress(0, 20, 0)
 		);
 		
 		FinsNodeAddress destNode = new FinsNodeAddress(0,  10,  0);
