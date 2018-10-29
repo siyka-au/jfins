@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -46,9 +47,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private final FinsNodeAddress nodeAddress;
-	private final InetSocketAddress destinationAddress;
-	private final InetSocketAddress sourceAddress;
-
+	
 	private final NioEventLoopGroup workerGroup;
 	private final Bootstrap bootstrap;
 	private Channel channel;
@@ -62,8 +61,6 @@ public class FinsNettyUdpMaster implements FinsMaster {
 
 	public FinsNettyUdpMaster(final InetSocketAddress destinationAddress, final InetSocketAddress sourceAddress, final FinsNodeAddress nodeAddress) {
 		this.nodeAddress = nodeAddress;
-		this.sourceAddress = sourceAddress;
-		this.destinationAddress = destinationAddress;
 
 		this.futures = new HashMap<>();
 
@@ -72,6 +69,8 @@ public class FinsNettyUdpMaster implements FinsMaster {
 		this.bootstrap.group(this.workerGroup)
 				.channel(NioDatagramChannel.class)
 				.option(ChannelOption.SO_BROADCAST, true)
+				.remoteAddress(destinationAddress)
+				.localAddress(sourceAddress)
 				.handler(new ChannelInitializer<DatagramChannel>() {
 					@Override
 					public void initChannel(DatagramChannel channel) throws Exception {
@@ -95,20 +94,23 @@ public class FinsNettyUdpMaster implements FinsMaster {
 	@Override
 	public CompletableFuture<Void> connect() {
 		return CompletableFuture.runAsync(() -> {
-			this.bootstrap.connect(this.destinationAddress, this.sourceAddress).addListener(new ChannelFutureListener() {
-				@Override
-				public void operationComplete(ChannelFuture future) {
-					FinsNettyUdpMaster.this.channel = future.syncUninterruptibly().channel();
-				}
-			})
-			.syncUninterruptibly();
+			try {
+				FinsNettyUdpMaster.this.channel = this.bootstrap.connect().sync().channel();
+			} catch (InterruptedException e) {
+				throw new CompletionException(e);
+			}
 		});
 	}
 
 	@Override
 	public CompletableFuture<Void> disconnect() {
 		return CompletableFuture.runAsync(() -> {
-				this.workerGroup.shutdownGracefully().syncUninterruptibly();
+			try {
+				FinsNettyUdpMaster.this.channel.closeFuture().sync();
+				FinsNettyUdpMaster.this.workerGroup.shutdownGracefully().sync();
+			} catch (InterruptedException e) {
+				throw new CompletionException(e);
+			}
 		});
 	}
 	
