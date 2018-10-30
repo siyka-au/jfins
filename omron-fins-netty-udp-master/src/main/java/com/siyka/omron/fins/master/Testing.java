@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsIoMemoryArea;
+import com.siyka.omron.fins.FinsNode;
 import com.siyka.omron.fins.FinsNodeAddress;
 
 public class Testing {
@@ -17,13 +18,11 @@ public class Testing {
 
 	
 	public static void main(String[] args) throws InterruptedException, ExecutionException  {
-		final FinsMaster master = new FinsNettyUdpMaster(
-			new InetSocketAddress("192.168.250.10", 9600),
-			9601,
-			new FinsNodeAddress(0, 20, 0)
-		);
 		
-		FinsNodeAddress destNode = new FinsNodeAddress(0,  10,  0);
+		final FinsNode remote = new FinsNode(new InetSocketAddress("192.168.250.10", 9600), new FinsNodeAddress(0,  10,  0));
+		final FinsNode local = new FinsNode(new InetSocketAddress("192.168.250.11", 9601), new FinsNodeAddress(0,  20,  0));
+
+		final FinsMaster master = new FinsNettyUdpMaster(remoteAddress,  local, sourceNodeAddress);
 		
 		logger.info("Connecting...");
 		master.connect().get();
@@ -37,7 +36,7 @@ public class Testing {
 					
 					try {
 						logger.info("Sending write command");
-						master.writeString(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), String.format("Hi %d", i));
+						master.writeString(new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 10000), String.format("Hi %d", i));
 //						master.writeWord(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_WORD, 600, 0), new Bit(true));
 //						master.writeBits(destNode, new FinsIoAddress(FinsIoMemoryArea.DM_BIT, 600, 4), new Bit(true), new Bit(true), new Bit(true));
 						

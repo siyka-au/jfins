@@ -2,10 +2,9 @@ package com.siyka.omron.fins;
 
 public class MemoryAreaReadCommand extends AddressableCommand {
 
-	
-	private final short itemCount;
+	private final int itemCount;
 
-	public MemoryAreaReadCommand(final FinsIoAddress address, final short itemCount) {
+	public MemoryAreaReadCommand(final FinsIoAddress address, final int itemCount) {
 		super(address);
 		this.itemCount = itemCount;
 	}
@@ -15,7 +14,7 @@ public class MemoryAreaReadCommand extends AddressableCommand {
 		return FinsCommandCode.MEMORY_AREA_READ;
 	}
 
-	public short getItemCount() {
+	public int getItemCount() {
 		return itemCount;
 	}
 
