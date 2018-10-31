@@ -22,7 +22,7 @@ public class Testing {
 		final FinsNode remote = new FinsNode(new InetSocketAddress("192.168.250.10", 9600), new FinsNodeAddress(0,  10,  0));
 		final FinsNode local = new FinsNode(new InetSocketAddress("192.168.250.11", 9601), new FinsNodeAddress(0,  20,  0));
 
-		final FinsMaster master = new FinsNettyUdpMaster(remoteAddress,  local, sourceNodeAddress);
+		final FinsMaster master = new FinsNettyUdpMaster(remote, local);
 		
 		logger.info("Connecting...");
 		master.connect().get();

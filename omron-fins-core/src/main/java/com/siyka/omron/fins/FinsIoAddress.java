@@ -79,4 +79,8 @@ public final class FinsIoAddress implements Serializable {
 		return true;
 	}
 	
+	public static FinsIoAddress dmWord(int address) {
+		return new FinsIoAddress(FinsIoMemoryArea.DM_WORD, address);
+	}
+	
 }
