@@ -12,7 +12,7 @@
 	</parent>
 
 	<name>Omron FINS Netty UDP Master</name>
-	<artifactId>omron-fins-netty-udp-master</artifactId>
+	<artifactId>omron-fins-netty-udp</artifactId>
 
 	<dependencies>
 		<dependency>
@@ -21,7 +21,7 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>omron-fins-netty-codec</artifactId>
+			<artifactId>omron-fins-slave</artifactId>
 		</dependency>
 
 		<dependency>

@@ -40,17 +40,7 @@
 
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>omron-fins-netty-codec</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>omron-fins-netty-udp-master</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>omron-fins-netty-udp-slave</artifactId>
+				<artifactId>omron-fins-netty-udp</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
