@@ -115,7 +115,7 @@ public class FinsFrameUdpCodec extends MessageToMessageCodec<DatagramPacket, Fin
 	
 	private FinsFrame<?> decodeResponse(ChannelHandlerContext context, FinsHeader header, FinsCommandCode commandCode, ByteBuf buffer) {
 		final FinsEndCode endCode = FinsEndCode.valueOf(buffer.readShort()).orElse(FinsEndCode.UNKNOWN);
-		Optional.ofNullable(this.outgoingCommands.get(header.getServiceAddress())).ifPresent(initiatingCommand -> {
+		return Optional.ofNullable(this.outgoingCommands.get(header.getServiceAddress())).map(initiatingCommand -> {
 			
 			// Verify the command code is the same
 			if (commandCode == initiatingCommand.getCommandCode()) {
@@ -137,6 +137,8 @@ public class FinsFrameUdpCodec extends MessageToMessageCodec<DatagramPacket, Fin
 				}
 			}
 		});
+		
+		
 	}
 	
 }
