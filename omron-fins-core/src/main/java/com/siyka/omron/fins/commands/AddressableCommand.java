@@ -1,4 +1,6 @@
-package com.siyka.omron.fins;
+package com.siyka.omron.fins.commands;
+
+import com.siyka.omron.fins.FinsIoAddress;
 
 public abstract class AddressableCommand implements FinsCommand {
 

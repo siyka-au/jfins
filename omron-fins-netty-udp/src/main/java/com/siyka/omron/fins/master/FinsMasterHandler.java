@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.siyka.omron.fins.FinsFrame;
-import com.siyka.omron.fins.FinsResponse;
+import com.siyka.omron.fins.responses.FinsResponse;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

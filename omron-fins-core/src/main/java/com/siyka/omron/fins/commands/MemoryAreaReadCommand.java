@@ -1,4 +1,7 @@
-package com.siyka.omron.fins;
+package com.siyka.omron.fins.commands;
+
+import com.siyka.omron.fins.CommandCode;
+import com.siyka.omron.fins.FinsIoAddress;
 
 public class MemoryAreaReadCommand extends AddressableCommand {
 
@@ -10,8 +13,8 @@ public class MemoryAreaReadCommand extends AddressableCommand {
 	}
 
 	@Override
-	public FinsCommandCode getCommandCode() {
-		return FinsCommandCode.MEMORY_AREA_READ;
+	public CommandCode getCommandCode() {
+		return CommandCode.MEMORY_AREA_READ;
 	}
 
 	public int getItemCount() {

@@ -16,18 +16,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.siyka.omron.fins.Bit;
-import com.siyka.omron.fins.FinsCommand;
 import com.siyka.omron.fins.FinsFrame;
 import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsNode;
-import com.siyka.omron.fins.FinsResponse;
-import com.siyka.omron.fins.MemoryAreaReadCommand;
-import com.siyka.omron.fins.MemoryAreaReadWordsResponse;
-import com.siyka.omron.fins.MemoryAreaWriteBitsCommand;
-import com.siyka.omron.fins.MemoryAreaWriteWordsCommand;
-import com.siyka.omron.fins.SimpleResponse;
 import com.siyka.omron.fins.Word;
+import com.siyka.omron.fins.commands.FinsCommand;
+import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
+import com.siyka.omron.fins.commands.MemoryAreaWriteBitsCommand;
+import com.siyka.omron.fins.commands.MemoryAreaWriteWordsCommand;
+import com.siyka.omron.fins.responses.FinsResponse;
+import com.siyka.omron.fins.responses.MemoryAreaReadWordsResponse;
+import com.siyka.omron.fins.responses.SimpleResponse;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -288,7 +288,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 	}
 	
 	// Internal methods
-	private <Command extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<Command> frame, final int attempt) {
+	private <C extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<C> frame, final int attempt) {
 		logger.debug("Sending FinsFrame");
 		final CompletableFuture<FinsFrame<FinsResponse>> future = new CompletableFuture<>();
 		logger.debug("Storing response future with service ID {}", frame.getHeader().getServiceAddress());
@@ -325,7 +325,7 @@ public class FinsNettyUdpMaster implements FinsMaster {
 //		}
 	}
 
-	private <Command extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<Command> frame) {
+	private <C extends FinsCommand> CompletableFuture<FinsFrame<FinsResponse>> send(final FinsFrame<C> frame) {
 		return send(frame, 0);
 	}
 
