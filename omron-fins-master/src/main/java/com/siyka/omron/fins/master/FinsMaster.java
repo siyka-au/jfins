@@ -5,7 +5,6 @@ import java.util.concurrent.CompletableFuture;
 
 import com.siyka.omron.fins.Bit;
 import com.siyka.omron.fins.FinsIoAddress;
-import com.siyka.omron.fins.FinsNodeAddress;
 import com.siyka.omron.fins.Word;
 
 public interface FinsMaster {
