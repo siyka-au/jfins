@@ -1,19 +1,18 @@
 package com.siyka.omron.fins;
 
+import static com.siyka.omron.fins.CommonCodecs.decodeHeader;
+import static com.siyka.omron.fins.CommonCodecs.encodeHeader;
+
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.siyka.omron.fins.FinsHeader.MessageType;
 import com.siyka.omron.fins.commands.FinsCommand;
-import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
 import com.siyka.omron.fins.responses.FinsResponse;
-import com.siyka.omron.fins.responses.SimpleResponse;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -23,9 +22,6 @@ import io.netty.handler.codec.EncoderException;
 import io.netty.handler.codec.MessageToMessageCodec;
 import io.netty.util.ReferenceCountUtil;
 
-import static com.siyka.omron.fins.CommonCodecs.encodeHeader;
-import static com.siyka.omron.fins.CommonCodecs.decodeHeader;
-
 public class FinsFrameUdpCodec extends MessageToMessageCodec<DatagramPacket, FinsFrame<?>> {
 
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -34,7 +30,7 @@ public class FinsFrameUdpCodec extends MessageToMessageCodec<DatagramPacket, Fin
 	private InetSocketAddress localAddress;
 	
 	private Map<Byte, FinsCommand> outgoingCommands;
-	private Map<Byte, FinsCommand> incomingCommands;
+	private Map<FinsCommand, FinsFrame<FinsCommand>> incomingCommands;
 	
 	private final FinsCommandEncoder commandEncoder;
 	private final FinsResponseDecoder responseDecoder;
@@ -42,7 +38,9 @@ public class FinsFrameUdpCodec extends MessageToMessageCodec<DatagramPacket, Fin
 	private final FinsCommandDecoder commandDecoder;
 	private final FinsResponseEncoder responseEncoder;
     
-	public FinsFrameUdpCodec(InetSocketAddress remoteAddress, InetSocketAddress localAddress) {
+	public FinsFrameUdpCodec(InetSocketAddress remoteAddress, InetSocketAddress localAddress,
+			Map<Byte, FinsCommand> outgoingCommands,
+			Map<FinsCommand, FinsFrame<FinsCommand>> incomingCommands) {
 		super();
 		this.remoteAddress = remoteAddress;
 		this.localAddress = localAddress;
@@ -53,8 +51,8 @@ public class FinsFrameUdpCodec extends MessageToMessageCodec<DatagramPacket, Fin
 		this.commandDecoder = new FinsCommandDecoder();
 		this.responseEncoder = new FinsResponseEncoder();
 		
-		this.outgoingCommands = new HashMap<>();
-		this.incomingCommands = new HashMap<>();
+		this.outgoingCommands = outgoingCommands;
+		this.incomingCommands = incomingCommands;
 	}
 	
 	@Override
@@ -91,12 +89,14 @@ public class FinsFrameUdpCodec extends MessageToMessageCodec<DatagramPacket, Fin
 		
 		switch(header.getMessageType()) {
 			case COMMAND: {
-				out.add(this.commandDecoder.decode(buffer));
+				FinsCommand command = commandDecoder.decode(buffer);
+				incomingCommands.put(command, new FinsFrame<>(header, command));
+				out.add(command);
 				break;
 			}
 			
 			case RESPONSE: {
-				out.add(this.responseDecoder.decode(buffer));
+				out.add(responseDecoder.decode(buffer));
 				break;
 			}
 		}

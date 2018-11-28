@@ -59,7 +59,6 @@ public class Testing implements ServiceCommandHandler {
 //		master.disconnect().get();		
 	}
 
-
 	@Override
 	public void onMemoryAreaWrite(ServiceCommand<MemoryAreaWriteCommand, SimpleResponse> service) {
 		logger.info("Memory Area Write: {}", service.getCommand().getAddress());

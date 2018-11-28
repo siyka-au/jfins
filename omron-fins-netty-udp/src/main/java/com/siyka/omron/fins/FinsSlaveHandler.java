@@ -53,7 +53,7 @@ public class FinsSlaveHandler extends SimpleChannelInboundHandler<FinsCommand> {
 
 		@Override
 		public void respond(Response response) {
-			fins.send(response);
+			fins.send(response, command);
 		}
 		
 		public static <Command extends FinsCommand, Response extends FinsResponse> FinsNettyUdpSlaveServiceCommand<Command, Response> of(FinsNettyUdp fins, Command command) {

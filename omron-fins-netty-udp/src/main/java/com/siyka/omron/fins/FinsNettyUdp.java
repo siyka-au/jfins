@@ -52,6 +52,9 @@ public class FinsNettyUdp implements FinsMaster, FinsSlave {
 
 	private Map<Byte, CompletableFuture<FinsResponse>> responseFutures;
 
+	private Map<Byte, FinsCommand> outgoingCommands;
+	private Map<FinsCommand, FinsFrame<FinsCommand>> incomingCommands;
+	
 	private ServiceCommandHandler handler;
 
 	// TODO make configurable
@@ -63,6 +66,9 @@ public class FinsNettyUdp implements FinsMaster, FinsSlave {
 
 		responseFutures = new HashMap<>();
 
+		outgoingCommands = new HashMap<>();
+		incomingCommands = new HashMap<>();
+				
 		workerGroup = new NioEventLoopGroup();
 		bootstrap = new Bootstrap();
 		bootstrap.group(workerGroup)
@@ -77,7 +83,9 @@ public class FinsNettyUdp implements FinsMaster, FinsSlave {
 								.addLast(new LoggingHandler(LogLevel.DEBUG))
 								.addLast(new FinsFrameUdpCodec(
 										remote.getSocketAddress(),
-										local.getSocketAddress()))
+										local.getSocketAddress(),
+										outgoingCommands,
+										incomingCommands))
 								.addLast(new FinsMasterHandler(responseFutures))
 								.addLast(new FinsSlaveHandler(FinsNettyUdp.this));
 					}
@@ -313,10 +321,11 @@ public class FinsNettyUdp implements FinsMaster, FinsSlave {
 		return send(command, 0);
 	}
 	
-	<R extends FinsResponse> CompletableFuture<Void> send(R response) {
+	<R extends FinsResponse> CompletableFuture<Void> send(R response, FinsCommand command) {
 		return CompletableFuture.runAsync(() -> {
 			try {
-				FinsFrame<R> frame = new FinsFrame<>(defaultCommandHeader(), response);
+				FinsFrame<FinsCommand> incomingFrame = incomingCommands.get(command);
+				FinsFrame<R> frame = new FinsFrame<>(defaultResponseHeader(incomingFrame), response);
 				channel.writeAndFlush(frame).sync();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
