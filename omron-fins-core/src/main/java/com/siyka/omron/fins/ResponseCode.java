@@ -6,7 +6,7 @@ import static java.util.stream.Collectors.toMap;
 import java.util.Map;
 import java.util.Optional;
 
-public enum EndCode {
+public enum ResponseCode {
 
 	// Normal completion
 	NORMAL_COMPLETION(0x0000),
@@ -87,33 +87,33 @@ public enum EndCode {
 	
 	UNKNOWN(0xffff);
 	
-	private final short endCodeValue;
+	private final short responseCodeValue;
 
-	private final static Map<Short, EndCode> map = stream(EndCode.values())
-			.collect(toMap(endCode -> endCode.endCodeValue, endCodeValue -> endCodeValue));
+	private final static Map<Short, ResponseCode> map = stream(ResponseCode.values())
+			.collect(toMap(responseCode -> responseCode.responseCodeValue, responseCodeValue -> responseCodeValue));
 
-	private EndCode(final short endCodeValue) {
-		this.endCodeValue = endCodeValue;
+	private ResponseCode(final short responseCodeValue) {
+		this.responseCodeValue = responseCodeValue;
 	}
 	
-	private EndCode(final int endCodeValue) {
-		this((short) endCodeValue);
+	private ResponseCode(final int responseCodeValue) {
+		this((short) responseCodeValue);
 	}
 
-	public static Optional<EndCode> valueOf(final short endCodeValue) {
+	public static Optional<ResponseCode> valueOf(final short responseCodeValue) {
 		// This removes fatal and non-fatal CPU unit warning and also the relay
 		// error which has nothing to do with the command response
 		int mask = 0b0000_0000_0000_0000_0111_111_0011_1111;
-		short val = (short) (endCodeValue & mask);
+		short val = (short) (responseCodeValue & mask);
 		return Optional.ofNullable(map.get(val));
 	}
 	
-	public static Optional<EndCode> valueOf(final int endCodeValue) {
-		return EndCode.valueOf((short) endCodeValue);
+	public static Optional<ResponseCode> valueOf(final int responseCodeValue) {
+		return ResponseCode.valueOf((short) responseCodeValue);
 	}
 
 	public short getValue() {
-		return this.endCodeValue;
+		return this.responseCodeValue;
 	}
 	
 }

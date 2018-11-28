@@ -1,27 +1,34 @@
 package com.siyka.omron.fins.commands;
 
-import java.util.List;
-
+import com.siyka.omron.fins.ByteAlign;
 import com.siyka.omron.fins.CommandCode;
-import com.siyka.omron.fins.DataItem;
 import com.siyka.omron.fins.FinsIoAddress;
 
-public class MemoryAreaWriteCommand<T extends DataItem<?>> extends AddressableCommand {
+public class MemoryAreaWriteCommand extends AddressableCommand {
 
-	private final List<T> items;
+	private final int itemCount;
+	private final byte[] data;
 
-	public MemoryAreaWriteCommand(final FinsIoAddress address, final List<T> items) {
+	public MemoryAreaWriteCommand(FinsIoAddress address, byte[] data) {
 		super(address);
-		this.items = items;
+		this.data = ByteAlign.align(data);
+		if (this.data.length % address.getMemoryArea().getDataByteSize() != 0) {
+			throw new IllegalArgumentException(String.format("Address area %s required integer multiple bytes of size %d", address.getMemoryArea(), address.getMemoryArea().getDataByteSize()));
+		}
+		this.itemCount = this.data.length / address.getMemoryArea().getDataByteSize();
 	}
 
 	@Override
 	public CommandCode getCommandCode() {
 		return CommandCode.MEMORY_AREA_WRITE;
 	}
+	
+	public int getItemCount() {
+		return this.itemCount;
+	}
 
-	public List<T> getItems() {
-		return this.items;
+	public byte[] getData() {
+		return this.data;
 	}
 
 }

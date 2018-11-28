@@ -9,40 +9,33 @@ import com.siyka.omron.fins.Word;
 
 public interface FinsMaster {
 
-	public CompletableFuture<Void> connect();
+	public CompletableFuture<List<Word>> readWords(FinsIoAddress address, int itemCount);
+	public CompletableFuture<Word> readWord(FinsIoAddress address);
 
-	public CompletableFuture<Void> disconnect();
-
-	public CompletableFuture<List<Word>> readWords(final FinsIoAddress address, final int itemCount);
-	public CompletableFuture<Word> readWord(final FinsIoAddress address);
-
-	public CompletableFuture<byte[]> readBytes(final FinsIoAddress address, final int itemCount);
+	public CompletableFuture<byte[]> readBytes(FinsIoAddress address, int itemCount);
 	
-	public CompletableFuture<String> readString(final FinsIoAddress address, final int wordLength);
+	public CompletableFuture<String> readString(FinsIoAddress address, int wordLength);
 	
-//	public CompletableFuture<List<Bit>> readBits(final FinsIoAddress address, final int itemCount);
-//	public CompletableFuture<Bit> readBit(final FinsIoAddress address);
+//	public CompletableFuture<List<Bit>> readBits(FinsIoAddress address, int itemCount);
+//	public CompletableFuture<Bit> readBit(FinsIoAddress address);
 
-//	public CompletableFuture<List<Word>> readMultipleWords(final List<FinsIoAddress> addresses);
+//	public CompletableFuture<List<Word>> readMultipleWords(List<FinsIoAddress> addresses);
 
-	public CompletableFuture<Void> writeWords(final FinsIoAddress address, final List<Word> items);
-	public CompletableFuture<Void> writeWords(final FinsIoAddress address, final Word... items);
-	public CompletableFuture<Void> writeWord(final FinsIoAddress address, final Word item);
-
-	public CompletableFuture<Void> writeBits(final FinsIoAddress address, final List<Bit> items);
-	public CompletableFuture<Void> writeBits(final FinsIoAddress address, final Bit... items);
-	public CompletableFuture<Void> writeBit(final FinsIoAddress address, final Bit value);
-
-	public CompletableFuture<Void> writeBytes(final FinsIoAddress address, final List<Byte> bytes);
-	public CompletableFuture<Void> writeBytes(final FinsIoAddress address, final byte... bytes);
-	public CompletableFuture<Void> writeBytes(final FinsIoAddress address, final Byte... bytes);
+	public CompletableFuture<Void> writeBytes(FinsIoAddress address, List<Byte> bytes);
+	public CompletableFuture<Void> writeBytes(FinsIoAddress address, byte... bytes);
+	public CompletableFuture<Void> writeBytes(FinsIoAddress address, Byte... bytes);
 	
-	public CompletableFuture<Void> writeString(final FinsIoAddress address, final String text, final int maxLength);
-	public CompletableFuture<Void> writeString(final FinsIoAddress address, final String text);
+	public CompletableFuture<Void> writeWords(FinsIoAddress address, List<Word> items);
+	public CompletableFuture<Void> writeWords(FinsIoAddress address, Word... items);
+	public CompletableFuture<Void> writeWord(FinsIoAddress address, Word item);
+
+	public CompletableFuture<Void> writeBits(FinsIoAddress address, List<Bit> items);
+	public CompletableFuture<Void> writeBits(FinsIoAddress address, Bit... items);
+	public CompletableFuture<Void> writeBit(FinsIoAddress address, Bit value);
 	
-//	public CompletableFuture<Void> writeMultipleWords(final List<FinsIoAddress> addresses, final List<Short> items);
-
-
-
+	public CompletableFuture<Void> writeString(FinsIoAddress address, String text, int maxLength);
+	public CompletableFuture<Void> writeString(FinsIoAddress address, String text);
+	
+//	public CompletableFuture<Void> writeMultipleWords(List<FinsIoAddress> addresses, List<Short> items);
 
 }

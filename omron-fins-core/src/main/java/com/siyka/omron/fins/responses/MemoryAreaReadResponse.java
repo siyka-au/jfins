@@ -1,22 +1,20 @@
 package com.siyka.omron.fins.responses;
 
-import java.util.List;
-
+import com.siyka.omron.fins.ByteAlign;
 import com.siyka.omron.fins.CommandCode;
-import com.siyka.omron.fins.DataItem;
-import com.siyka.omron.fins.EndCode;
+import com.siyka.omron.fins.ResponseCode;
 
-public abstract class MemoryAreaReadResponse<T extends DataItem<?>> extends SimpleResponse {
+public class MemoryAreaReadResponse extends SimpleResponse {
 
-	private final List<T> items;
+	private final byte[] data;
 	
-	public MemoryAreaReadResponse(final EndCode endCode, final List<T> items) {
+	public MemoryAreaReadResponse(final ResponseCode endCode, final byte[] data) {
 		super(CommandCode.MEMORY_AREA_READ, endCode);
-		this.items = items;
+		this.data = ByteAlign.align(data);
 	}
 	
-	public List<T> getItems() {
-		return this.items;
+	public byte[] getData() {
+		return this.data;
 	}
 
 }

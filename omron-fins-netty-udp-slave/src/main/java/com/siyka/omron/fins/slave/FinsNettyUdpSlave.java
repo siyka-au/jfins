@@ -137,34 +137,5 @@ public class FinsNettyUdpSlave implements FinsSlave {
         
 	}
 	
-	private static class FinsNettyUdpSlaveServiceCommand<Command extends FinsCommand, Response extends FinsResponse> implements ServiceCommandHandler.ServiceCommand<Command, Response> {
-		
-		private final ChannelHandlerContext context;
-		private final FinsHeader header;
-		private final Command command;
-		
-		private FinsNettyUdpSlaveServiceCommand(ChannelHandlerContext context, final FinsHeader header, Command command) {
-            this.context = context;
-            this.header = new FinsHeader(FinsHeader.MessageType.RESPONSE, header.getSourceAddress(), header.getDestinationAddress(), header.getServiceAddress());
-            this.command = command;
-        }
 
-		@Override
-		public Command getCommand() {
-			return this.command;
-		}
-
-		@Override
-		public void sendResponse(Response response) {
-			
-			this.context.writeAndFlush(new FinsFrame(this.header, response));
-		}
-		
-		@SuppressWarnings("unchecked")
-		public static <Command extends FinsCommand, Response extends FinsResponse> FinsNettyUdpSlaveServiceCommand<Command, Response> of(final FinsFrame frame, final ChannelHandlerContext context) {
-            return new FinsNettyUdpSlaveServiceCommand<>(context, frame.getHeader(), (Command) frame.getPdu());
-        }
-		
-	}
-	
 }

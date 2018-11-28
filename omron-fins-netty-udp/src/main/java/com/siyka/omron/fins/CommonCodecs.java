@@ -1,22 +1,17 @@
-package com.siyka.omron.fins.master;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
+package com.siyka.omron.fins;
 
 import com.siyka.omron.fins.CommandCode;
+import com.siyka.omron.fins.ResponseCode;
 import com.siyka.omron.fins.FinsHeader;
 import com.siyka.omron.fins.FinsIoAddress;
 import com.siyka.omron.fins.FinsNodeAddress;
-import com.siyka.omron.fins.Word;
-import com.siyka.omron.fins.commands.MemoryAreaReadCommand;
 import com.siyka.omron.fins.responses.SimpleResponse;
 
 import io.netty.buffer.ByteBuf;
 
-public class Codecs {
+class CommonCodecs {
 
-	public static ByteBuf encodeHeader(final ByteBuf buffer, final FinsHeader header) {
+	static ByteBuf encodeHeader(FinsHeader header, ByteBuf buffer) {
 		byte icf = 0x00;
 		if (header.useGateway() == true) icf = (byte) (icf | 0x80);
 		if (header.getMessageType() == FinsHeader.MessageType.RESPONSE) icf = (byte) (icf | 0x40);
@@ -34,18 +29,18 @@ public class Codecs {
 		return buffer;
 	};
 	
-	public static FinsHeader decodeHeader(final ByteBuf buffer) {
-		final byte icf = buffer.readByte();
+	static FinsHeader decodeHeader(ByteBuf buffer) {
+		byte icf = buffer.readByte();
 		// Skip the reserved field
 		buffer.readByte();
-		final byte gatewayCount = buffer.readByte();
-		final byte destinationNetwork = buffer.readByte();
-		final byte destinationNode = buffer.readByte();
-		final byte destinationUnit = buffer.readByte();
-		final byte sourceNetwork = buffer.readByte();
-		final byte sourceNode = buffer.readByte();
-		final byte sourceUnit = buffer.readByte();
-		final byte serviceAddress = buffer.readByte();
+		byte gatewayCount = buffer.readByte();
+		byte destinationNetwork = buffer.readByte();
+		byte destinationNode = buffer.readByte();
+		byte destinationUnit = buffer.readByte();
+		byte sourceNetwork = buffer.readByte();
+		byte sourceNode = buffer.readByte();
+		byte sourceUnit = buffer.readByte();
+		byte serviceAddress = buffer.readByte();
 		return new FinsHeader(
 				((icf & 0x80) != 0) ? true : false,
 				((icf & 0x40) != 0) ? FinsHeader.MessageType.RESPONSE : FinsHeader.MessageType.COMMAND,
@@ -56,30 +51,41 @@ public class Codecs {
 				serviceAddress);
 	}
 	
-	static ByteBuf encodeCommandCode(final ByteBuf buffer, final CommandCode commandCode)  {
+	static ByteBuf encodeCommandCode(CommandCode commandCode, ByteBuf buffer)  {
 		buffer.writeShort(commandCode.getValue());
 		return buffer;
 	};
 	
-	public static CommandCode decodeCommandCode(final ByteBuf buffer)  {
-		return CommandCode.valueOf(buffer.readShort()).orElse(CommandCode.UNKNOWN);
+	static CommandCode decodeCommandCode(ByteBuf buffer)  {
+		return CommandCode.valueOf(buffer.readShort()).get();
 	};
 	
-	static ByteBuf encodeIoAddress(final ByteBuf buffer, final FinsIoAddress address)  {
+	static ByteBuf encodeResponseCode(ResponseCode endCode, ByteBuf buffer)  {
+		buffer.writeShort(endCode.getValue());
+		return buffer;
+	};
+	
+	static ResponseCode decodeResponseCode(ByteBuf buffer) {
+		return ResponseCode.valueOf(buffer.readShort()).get();
+	}
+	
+	static ByteBuf encodeIoAddress(FinsIoAddress address, ByteBuf buffer)  {
 		buffer.writeByte(address.getMemoryArea().getValue());
 		buffer.writeShort(address.getAddress());
 		buffer.writeByte(address.getBitOffset());
 		return buffer;
 	};
-
-	public static List<Word> decodeMemoryAreaReadWordsResponse(final ByteBuf buffer, final MemoryAreaReadCommand initiatingCommand) {
-		final List<Word> items = new ArrayList<>(initiatingCommand.getItemCount());
-		IntStream.range(0, initiatingCommand.getItemCount()).forEach(i -> items.add(new Word(buffer.readShort(), false)));
-		return items;
+	
+	static FinsIoAddress decodeIoAddress(ByteBuf buffer)  {
+		FinsIoMemoryArea memoryArea = FinsIoMemoryArea.valueOf(buffer.readByte()).get();
+		short address = buffer.readShort();
+		byte bitOffset = buffer.readByte();
+		return new FinsIoAddress(memoryArea, address, bitOffset);
 	};
 
-	public static ByteBuf encodeSimpleResponse(final ByteBuf buffer, final SimpleResponse command) {
-		// TODO Auto-generated method stub
+	static ByteBuf encodeSimpleResponse(SimpleResponse response, ByteBuf buffer) {
+		encodeCommandCode(response.getCommandCode(), buffer);
+		buffer.writeShort(response.getResponseCode().getValue());
 		return buffer;
 	}
 	

@@ -24,7 +24,9 @@ public enum FinsIoMemoryArea {
 	TASK_STATUS(0x46, 1),
 	INDEX_REGISTER_PV(0xdc, 4),
 	DATA_REGISTER_PV(0xbc, 2),
-	CLOCK_PULSES_CONDITION_FLAGS_BIT(0x07, 1);
+	CLOCK_PULSES_CONDITION_FLAGS_BIT(0x07, 1),
+	
+	UNKNOWN(0xff, 0);
 
 	private final byte memoryAreaValue;
 	private final int dataByteSize;
